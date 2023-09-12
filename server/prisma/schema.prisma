@@ -28,9 +28,35 @@ model organization {
   name   String              @unique
   status ORGANIZATION_STATUS @default(ACTIVE)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   user      user[]
+  team      team[]
+  project   project[]
+
+  @@map("organizations")
+}
+
+model team {
+  id             String       @id @default(uuid())
+  name           String
+  organizationId String
+  organization   organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@map("teams")
+}
+
+model project {
+  id             String       @id @default(uuid())
+  name           String
+  organizationId String
+  organization   organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@map("projects")
 }
 
 //Enum
@@ -38,3 +64,7 @@ enum ORGANIZATION_STATUS {
   ACTIVE
   BAN
 }
+
+// enum PROJECT_STATUS {
+
+// }
