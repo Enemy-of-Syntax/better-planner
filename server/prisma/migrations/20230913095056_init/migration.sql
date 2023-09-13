@@ -5,8 +5,8 @@ CREATE TYPE "ORGANIZATION_STATUS" AS ENUM ('ACTIVE', 'BAN');
 CREATE TABLE "users" (
     "id" STRING NOT NULL,
     "email" STRING NOT NULL,
-    "name" CHAR NOT NULL,
-    "password" CHAR NOT NULL,
+    "name" STRING NOT NULL,
+    "password" STRING NOT NULL,
     "organizationId" STRING NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
