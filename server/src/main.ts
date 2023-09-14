@@ -12,10 +12,10 @@ async function bootstrap() {
     new FastifyAdapter(),
   );
   const config = new DocumentBuilder()
+    .addBearerAuth()
     .setTitle('PMS ')
     .setDescription('PMS API')
     .setVersion('1.0')
-    .addTag('PMS')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

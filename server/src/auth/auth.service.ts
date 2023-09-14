@@ -1,39 +1,31 @@
 import {
   BadRequestException,
-  ConflictException,
   HttpException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { loginUserDto, registerUserDto } from './dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
-import { Prisma, user } from '@prisma/client';
 import { Responser } from 'libs/Responser';
-import { QueryServie } from './user.sql';
+import { QueryServie } from './auth.sql';
 import { v4 as uuidV4 } from 'uuid';
 @Injectable()
-export class UserService {
+export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly Jwt: JwtService,
+    private readonly jwt: JwtService,
     private queryService: QueryServie,
   ) {}
 
   async registerUser(dto: registerUserDto) {
-    console.log(dto);
     const { email, password, name, organizationId } = dto;
-    if (!email || !password || !name || !organizationId)
-      throw new BadRequestException('please fills all input fields');
 
     try {
-      //hash password
       const hashPw = await argon.hash(password);
-      console.log(hashPw);
-
       const uuid: string = await uuidV4();
-      console.log(uuid);
 
       const createUser = await this.queryService.insertNewUser({
         id: uuid,
@@ -43,18 +35,6 @@ export class UserService {
         organizationId,
       });
 
-      // const createUser = await this.prisma.user.create({
-      //   data: {
-      //     id: uuid,
-      //     email,
-      //     password: hashPw,
-      //     name,
-      //     organizationId,
-      //   },
-      // });
-
-      console.log(createUser);
-
       return Responser({
         statusCode: 201,
         message: 'registration success!',
@@ -62,7 +42,6 @@ export class UserService {
         body: createUser,
       });
     } catch (err) {
-      console.log(err);
       throw new HttpException(
         {
           message: 'error',
@@ -75,23 +54,24 @@ export class UserService {
 
   async loginUser(dto: loginUserDto) {
     const { email, password } = dto;
-    if (!email || !password)
-      throw new BadRequestException('please fill all input fields');
-
     try {
-      // const foundUser = this.queryService.findUserByEmail(email);
-      // if (!foundUser) throw new UnauthorizedException('Wrong credentials');
+      const foundUser = await this.queryService.findUserByEmail(email);
+      if (!foundUser) throw new UnauthorizedException('Wrong credentials');
 
-      // const passwordMatch = await argon.verify(foundUser?.password, password);
-      // if (!passwordMatch) throw new UnauthorizedException('Unauthorized');
+      const passwordMatch = await argon.verify(foundUser[0].password, password);
+      if (!passwordMatch)
+        throw new UnauthorizedException("Password doesn't match");
 
-      // const tokens = this.generateToken(foundUser.id, foundUser.email);
+      const tokens = await this.generateToken({
+        email: foundUser[0].email,
+        id: foundUser[0].id,
+      });
 
       return Responser({
         statusCode: 200,
         message: 'login success',
         devMessage: 'login success',
-        body: 'fd',
+        body: { ...tokens },
       });
     } catch (err) {
       throw new HttpException(
@@ -104,23 +84,44 @@ export class UserService {
     }
   }
 
-  async generateToken(id: string, email: string) {
+  async profile(id: string) {
+    try {
+      const profileUser = await this.queryService.findUserById(id);
+      if (!profileUser) throw new NotFoundException('user not found');
+
+      return Responser({
+        statusCode: 200,
+        message: 'profile success!',
+        devMessage: 'success',
+        body: profileUser,
+      });
+    } catch (err) {
+      throw new HttpException(
+        {
+          message: 'Unvalid',
+          devMessage: 'Unvalid',
+        },
+        401,
+      );
+    }
+  }
+
+  private async generateToken({ id, email }) {
     const payload = {
       id,
       email,
     };
-    if (!payload) throw new BadRequestException('Failed to generate token');
+    console.log(payload);
+    // if (!payload.email || !payload.id)
+    //   throw new BadRequestException('Failed to generate token');
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.Jwt.signAsync(
-        { payload },
-        {
-          secret: process.env.SECRET_KEY,
-          expiresIn: '1d',
-        },
-      ),
+      this.jwt.signAsync(payload, {
+        secret: process.env.SECRET_KEY,
+        expiresIn: '1d',
+      }),
 
-      this.Jwt.signAsync(
+      this.jwt.signAsync(
         { id: id },
         { secret: process.env.REFRESH_KEY, expiresIn: '7d' },
       ),

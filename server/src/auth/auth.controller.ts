@@ -1,12 +1,21 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { UserService } from './user.service';
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { loginUserDto, registerUserDto } from './dto';
+import { AuthService } from './auth.service';
+import { IauthRequest } from 'src/@types/authRequest';
+import { AuthGuard } from './auth.guard';
+import { request } from 'express';
 
-@Controller('user')
-@ApiTags('auth-users')
-export class UserController {
-  constructor(private readonly userService: UserService) {}
+@Controller('auth')
+@ApiTags('auth')
+export class AuthController {
+  constructor(private readonly authService: AuthService) {}
 
   @ApiResponse({ status: 200, description: 'user register success' })
   @ApiResponse({ status: 400, description: 'bad request ! register failed' })
@@ -19,10 +28,9 @@ export class UserController {
   @ApiOperation({ summary: 'user register' })
   @Post('register')
   RegisterUser(@Body() dto: registerUserDto) {
-    return this.userService.registerUser(dto);
+    return this.authService.registerUser(dto);
   }
 
-  //
   @ApiResponse({ status: 200, description: 'user login success' })
   @ApiResponse({ status: 401, description: 'unauthorized' })
   @ApiResponse({ status: 400, description: 'bad request' })
@@ -33,6 +41,14 @@ export class UserController {
   @ApiOperation({ summary: 'user login' })
   @Post('login')
   LoginUser(@Body() dto: loginUserDto) {
-    return this.userService.loginUser(dto);
+    return this.authService.loginUser(dto);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @ApiOperation({ summary: 'profile me' })
+  @Get('profile/me')
+  getProfile(@Req() request: IauthRequest) {
+    return this.authService.profile(request.user.id);
   }
 }
