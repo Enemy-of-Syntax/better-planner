@@ -5,6 +5,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator dbml {
+  provider = "prisma-dbml-generator"
+}
+
 datasource db {
   provider = "cockroachdb"
   url      = env("DATABASE_URL")
@@ -30,9 +34,11 @@ model organization {
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
   user      user[]
   team      team[]
   project   project[]
+  board     board[]
 
   @@map("organizations")
 }
@@ -48,15 +54,84 @@ model team {
   @@map("teams")
 }
 
+model member {
+  id            String      @id @default(uuid())
+
+  cardId        String
+  card          card        @relation(fields: [cardId],references: [id],onUpdate: Cascade,onDelete: NoAction)
+  
+  @@map("members")
+}
+
 model project {
-  id             String       @id @default(uuid())
+  id             String             @id @default(uuid())
   name           String
   organizationId String
-  organization   organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  organization   organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stauts         PROJECT_STATUS     @default(ONGOING)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 
   @@map("projects")
+}
+
+model board {
+  id              String        @id @default(uuid())
+  name            String        @db.String()
+  organizationId  String       
+  organization    organization  @relation(fields: [organizationId],references: [id],onDelete:NoAction ,onUpdate:NoAction )
+
+  list           list[]
+  @@map("boards")
+}
+
+model list {
+  id              String        @id @default(uuid())
+  title           String        @db.String()
+  boardId         String
+  board           board         @relation(fields: [boardId],references: [id],onDelete:NoAction ,onUpdate: Cascade)
+
+  card            card[]
+  @@map("lists")
+}
+
+model card {
+  id               String        @id  @default(uuid())
+  title            String        @db.String()
+  description      String        @db.String()
+  startDate        DateTime      @default(now()) @map("start_date")
+  dueDate          DateTime      @map("due_date")
+  listId           String
+  list             list          @relation(fields: [listId],references: [id],onUpdate: Cascade,onDelete:NoAction )
+  
+  member           member[]
+  label            label[]
+  file             file[]
+
+  @@map("cards")
+}
+
+model label {
+  id                String      @id  @default(uuid())
+  color             String      @db.String()
+  title             String      @db.String()
+  cardId            String      @db.String()
+  card              card        @relation(fields: [cardId],references: [id],onUpdate: Cascade,onDelete: NoAction)
+
+  @@map("labels") 
+}
+
+model file {
+  id                String      @id @default(uuid())
+  name              String      @db.String()
+  link              String      @db.String()
+  cardId            String
+  card              card       @relation(fields: [cardId],references: [id],onUpdate: Cascade,onDelete: Cascade)
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@map("files")
 }
 
 //Enum
@@ -65,6 +140,8 @@ enum ORGANIZATION_STATUS {
   BAN
 }
 
-// enum PROJECT_STATUS {
-
-// }
+enum PROJECT_STATUS {
+  ONGOING 
+  SUSPENDED
+  COMPLETED
+}

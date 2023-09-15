@@ -1,0 +1,127 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table users {
+  id String [pk]
+  email String [unique, not null]
+  name String [not null]
+  password String [not null]
+  organizationId String [not null]
+  organization organizations [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table organizations {
+  id String [pk]
+  name String [unique, not null]
+  status ORGANIZATION_STATUS [not null, default: 'ACTIVE']
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  user users [not null]
+  team teams [not null]
+  project projects [not null]
+  board boards [not null]
+}
+
+Table teams {
+  id String [pk]
+  name String [not null]
+  organizationId String [not null]
+  organization organizations [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table members {
+  id String [pk]
+  cardId String [not null]
+  card cards [not null]
+}
+
+Table projects {
+  id String [pk]
+  name String [not null]
+  organizationId String [not null]
+  organization organizations [not null]
+  stauts PROJECT_STATUS [not null, default: 'ONGOING']
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table boards {
+  id String [pk]
+  name String [not null]
+  organizationId String [not null]
+  organization organizations [not null]
+  list lists [not null]
+}
+
+Table lists {
+  id String [pk]
+  title String [not null]
+  boardId String [not null]
+  board boards [not null]
+  card cards [not null]
+}
+
+Table cards {
+  id String [pk]
+  title String [not null]
+  description String [not null]
+  startDate DateTime [default: `now()`, not null]
+  dueDate DateTime [not null]
+  listId String [not null]
+  list lists [not null]
+  member members [not null]
+  label labels [not null]
+  file files [not null]
+}
+
+Table labels {
+  id String [pk]
+  color String [not null]
+  title String [not null]
+  cardId String [not null]
+  card cards [not null]
+}
+
+Table files {
+  id String [pk]
+  name String [not null]
+  link String [not null]
+  cardId String [not null]
+  card cards [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Enum ORGANIZATION_STATUS {
+  ACTIVE
+  BAN
+}
+
+Enum PROJECT_STATUS {
+  ONGOING
+  SUSPENDED
+  COMPLETED
+}
+
+Ref: users.organizationId > organizations.id [delete: Cascade]
+
+Ref: teams.organizationId > organizations.id [delete: Cascade]
+
+Ref: members.cardId > cards.id [delete: No Action]
+
+Ref: projects.organizationId > organizations.id [delete: Cascade]
+
+Ref: boards.organizationId > organizations.id [delete: No Action]
+
+Ref: lists.boardId > boards.id [delete: No Action]
+
+Ref: cards.listId > lists.id [delete: No Action]
+
+Ref: labels.cardId > cards.id [delete: No Action]
+
+Ref: files.cardId > cards.id [delete: Cascade]
