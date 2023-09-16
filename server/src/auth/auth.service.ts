@@ -22,7 +22,6 @@ export class AuthService {
 
   async registerUser(dto: registerUserDto) {
     const { email, password, name, organizationId } = dto;
-
     try {
       const hashPw = await argon.hash(password);
       const uuid: string = await uuidV4();
@@ -111,9 +110,9 @@ export class AuthService {
       id,
       email,
     };
-    console.log(payload);
-    // if (!payload.email || !payload.id)
-    //   throw new BadRequestException('Failed to generate token');
+
+    if (!payload.email || !payload.id)
+      throw new BadRequestException('Failed to generate token');
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwt.signAsync(payload, {

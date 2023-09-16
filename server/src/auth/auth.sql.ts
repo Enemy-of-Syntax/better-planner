@@ -14,7 +14,9 @@ export class QueryServie {
 
   async findUserById(id: string): Promise<user> {
     return this.prisma.$queryRaw(
-      Prisma.sql`SELECT * FROM public.users WHERE id=${id}`,
+      Prisma.sql`
+      SELECT * FROM public.users WHERE id=${id}
+      `,
     );
   }
 

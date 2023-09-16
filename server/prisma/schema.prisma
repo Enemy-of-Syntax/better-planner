@@ -19,11 +19,13 @@ model user {
   email          String       @unique
   name           String       @db.String()
   password       String       @db.String()
-  organizationId String
+  organizationId String       
   organization   organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
+  member           member[]
+  team             team[]
   @@map("users")
 }
 
@@ -46,29 +48,54 @@ model organization {
 model team {
   id             String       @id @default(uuid())
   name           String
-  organizationId String
+
+  organizationId String       @map("organization_id")
   organization   organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+
+  createdUserId  String       @map("created_user_id")
+  createdBy      user         @relation(fields: [createdUserId],references: [id],onDelete: Cascade) 
+
+  createdAt      DateTime     @default(now())   @map("created_at")
+  updatedAt      DateTime     @updatedAt        @map("updated_at")
+
+  member        member[]
 
   @@map("teams")
 }
 
 model member {
-  id            String      @id @default(uuid())
+  id            String          @id @default(uuid())
 
-  cardId        String
-  card          card        @relation(fields: [cardId],references: [id],onUpdate: Cascade,onDelete: NoAction)
-  
+  teamId        String         @map("team_id")
+  team          team           @relation(fields: [teamId],references: [id]) 
+
+  userId        String         @map("user_id")
+  user           user          @relation(fields: [userId],references: [id])
+
+  role          MEMEBER_ROLE    @default(MEMBER)
+  status        MEMBER_STATUS   @default(ACTIVE)
+  tasks         taskAssignOnMember[]
+
   @@map("members")
+}
+
+model taskAssignOnMember {
+  id          String      @id @default(uuid())
+  memberId    String       @map("member_id")
+  member      member      @relation(fields: [memberId],references: [id],onDelete: Cascade,onUpdate: Cascade)
+  taskId      String      @map("task_id")
+  task        task        @relation(fields: [taskId],references: [id],onDelete: Cascade,onUpdate: Cascade)
 }
 
 model project {
   id             String             @id @default(uuid())
   name           String
-  organizationId String
+
+  organizationId String             @map("organization_id")
   organization   organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   stauts         PROJECT_STATUS     @default(ONGOING)
+
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
 
@@ -78,7 +105,7 @@ model project {
 model board {
   id              String        @id @default(uuid())
   name            String        @db.String()
-  organizationId  String       
+  organizationId  String        @map("organization_id")
   organization    organization  @relation(fields: [organizationId],references: [id],onDelete:NoAction ,onUpdate:NoAction )
 
   list           list[]
@@ -88,14 +115,14 @@ model board {
 model list {
   id              String        @id @default(uuid())
   title           String        @db.String()
-  boardId         String
+  boardId         String        @map("board_id")
   board           board         @relation(fields: [boardId],references: [id],onDelete:NoAction ,onUpdate: Cascade)
 
-  card            card[]
+  task            task[]
   @@map("lists")
 }
 
-model card {
+model task {
   id               String        @id  @default(uuid())
   title            String        @db.String()
   description      String        @db.String()
@@ -104,19 +131,19 @@ model card {
   listId           String
   list             list          @relation(fields: [listId],references: [id],onUpdate: Cascade,onDelete:NoAction )
   
-  member           member[]
   label            label[]
   file             file[]
+  members  taskAssignOnMember[]
 
-  @@map("cards")
+  @@map("tasks")
 }
 
 model label {
   id                String      @id  @default(uuid())
   color             String      @db.String()
   title             String      @db.String()
-  cardId            String      @db.String()
-  card              card        @relation(fields: [cardId],references: [id],onUpdate: Cascade,onDelete: NoAction)
+  taskId            String      @db.String()    @map("task_id")
+  task              task        @relation(fields: [taskId],references: [id],onUpdate: Cascade,onDelete: NoAction)
 
   @@map("labels") 
 }
@@ -125,8 +152,8 @@ model file {
   id                String      @id @default(uuid())
   name              String      @db.String()
   link              String      @db.String()
-  cardId            String
-  card              card       @relation(fields: [cardId],references: [id],onUpdate: Cascade,onDelete: Cascade)
+  taskId            String      @map("task_id")
+  task              task       @relation(fields: [taskId],references: [id],onUpdate: Cascade,onDelete: Cascade)
 
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
@@ -144,4 +171,17 @@ enum PROJECT_STATUS {
   ONGOING 
   SUSPENDED
   COMPLETED
+}
+
+enum MEMEBER_ROLE {
+  ADMIN
+  MEMBER
+}
+
+enum  MEMBER_STATUS {
+  ACTIVE 
+  INACTIVE   // member is not avaialbe on work, cuz of vacation or sick 
+  AVAILABLE   // free and ready to take new assignments
+  BUSY      
+  OUT_OF_OFFICE
 }

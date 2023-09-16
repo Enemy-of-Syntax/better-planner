@@ -10,7 +10,6 @@ import { loginUserDto, registerUserDto } from './dto';
 import { AuthService } from './auth.service';
 import { IauthRequest } from 'src/@types/authRequest';
 import { AuthGuard } from './auth.guard';
-import { request } from 'express';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -32,7 +31,7 @@ export class AuthController {
   }
 
   @ApiResponse({ status: 200, description: 'user login success' })
-  @ApiResponse({ status: 401, description: 'unauthorized' })
+  @ApiResponse({ status: 401, description: 'wrong credentials' })
   @ApiResponse({ status: 400, description: 'bad request' })
   @ApiBody({
     description: 'user login',
@@ -44,6 +43,8 @@ export class AuthController {
     return this.authService.loginUser(dto);
   }
 
+  @ApiResponse({ status: 200, description: 'token valid' })
+  @ApiResponse({ status: 401, description: 'invalid token' })
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @ApiOperation({ summary: 'profile me' })
