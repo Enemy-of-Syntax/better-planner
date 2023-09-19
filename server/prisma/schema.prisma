@@ -180,7 +180,7 @@ enum MEMEBER_ROLE {
 
 enum  MEMBER_STATUS {
   ACTIVE 
-  INACTIVE   // member is not avaialbe on work, cuz of vacation or sick 
+  INACTIVE   // member is not available on work, cuz of vacation or sick 
   AVAILABLE   // free and ready to take new assignments
   BUSY      
   OUT_OF_OFFICE
