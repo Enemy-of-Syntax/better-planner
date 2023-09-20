@@ -2,14 +2,14 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { Prisma, team } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateTeam } from './dto/team.dto';
-import { QueryServie } from 'src/auth/auth.sql';
+import { QueryService } from 'src/auth/auth.sql';
 import { organizationQuery } from 'src/organization/organization.sql';
 
 @Injectable()
 export class TeamQuery {
     constructor(
         private readonly prisma: PrismaService,
-        private readonly authQuery: QueryServie,
+        private readonly authQuery: QueryService,
         private readonly orgQuery: organizationQuery,
     ) {}
 

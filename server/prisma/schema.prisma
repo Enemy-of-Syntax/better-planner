@@ -19,8 +19,6 @@ model user {
   email          String       @unique
   name           String       @db.String()
   password       String       @db.String()
-  organizationId String       @db.String()       @map("organization_id")
-  organization   organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdAt      DateTime     @default(now())     @map("created_at")
   updatedAt      DateTime     @updatedAt          @map("updated_at")
 
@@ -31,14 +29,23 @@ model user {
 
 model project {
   id             String             @id @default(uuid())
-  name           String
-  organizationId String             @db.String()       @map("organization_id")
-  organization   organization       @relation(fields: [organizationId], references: [id],onUpdate: Cascade, onDelete: Cascade)
+  name           String             @db.String()     @unique
   status         PROJECT_STATUS     @default(ONGOING)
   createdAt      DateTime           @default(now())    @map("created_at")
   updatedAt      DateTime           @updatedAt         @map("updated_at")
-
+  ProjectOnOrganization    ProjectOnOrganization[]  
   @@map("projects")
+}
+
+model ProjectOnOrganization {
+  id                    String      @id @default(uuid())
+  organizationId        String      @db.String()     @map("organization_id")
+  organization          organization @relation(fields: [organizationId],references: [id],onUpdate: Cascade,onDelete: NoAction)
+  projectId             String      @db.String()      @map("project_id")
+  project               project       @relation(fields: [projectId],references: [id],onUpdate:Cascade ,onDelete:Cascade )
+  createdAt             DateTime     @default(now())  @map("created_at")
+  updatedAt             DateTime     @updatedAt       @map("updated_at")
+  @@map("project_on_organizations")
 }
 
 
@@ -49,9 +56,8 @@ model organization {
   createdAt DateTime  @default(now())     @map("created_at")
   updatedAt DateTime  @updatedAt          @map("updated_at")
 
-  user      user[]
   team      team[]
-  project   project[]
+  ProjectOnOrganization   ProjectOnOrganization[]
   board     board[]
 
   @@map("organizations")
@@ -74,23 +80,29 @@ model team {
 
 model member {
   id            String          @id @default(uuid())
-  teamId        String         @map("team_id")
-  team          team           @relation(fields: [teamId],references: [id]) 
-  userId        String         @map("user_id")
-  user           user          @relation(fields: [userId],references: [id])
-  role          MEMBER_ROLE    @default(MEMBER)
+  teamId        String          @map("team_id")
+  team          team            @relation(fields: [teamId],references: [id]) 
+  userId        String          @map("user_id")
+  user           user           @relation(fields: [userId],references: [id])
+  role          MEMBER_ROLE     @default(MEMBER)
   status        MEMBER_STATUS   @default(ACTIVE)
+  createdAt      DateTime       @default(now())   @map("created_at")
+  updatedAt      DateTime       @updatedAt        @map("updated_at")
+
   tasks         taskAssignOnMember[]
+
 
   @@map("members")
 }
 
 model taskAssignOnMember {
-  id          String      @id @default(uuid())
-  memberId    String       @map("member_id")
-  member      member      @relation(fields: [memberId],references: [id],onDelete: Cascade,onUpdate: Cascade)
-  taskId      String      @map("task_id")
-  task        task        @relation(fields: [taskId],references: [id],onDelete: Cascade,onUpdate: Cascade)
+  id             String          @id @default(uuid())
+  memberId       String          @map("member_id")
+  member         member          @relation(fields: [memberId],references: [id],onDelete: Cascade,onUpdate: Cascade)
+  taskId         String          @map("task_id")
+  task           task            @relation(fields: [taskId],references: [id],onDelete: Cascade,onUpdate: Cascade)
+  createdAt      DateTime     @default(now())   @map("created_at")
+  updatedAt      DateTime     @updatedAt        @map("updated_at")
 }
 
 
@@ -99,8 +111,9 @@ model board {
   name            String        @db.String()
   organizationId  String        @map("organization_id")
   organization    organization  @relation(fields: [organizationId],references: [id],onDelete:NoAction ,onUpdate:Cascade )
-
-  task           task[]
+  createdAt        DateTime     @default(now())  @map("created_at")
+  updatedAt        DateTime     @updatedAt       @map("updated_at")
+  task             task[]
   @@map("boards")
 }
 
@@ -109,12 +122,12 @@ model task {
   id               String        @id  @default(uuid())
   title            String        @db.String()
   description      String        @db.String()
-  boardId          String        @db.String()
+  boardId          String        @db.String()       @map("board_id")
   board            board         @relation(fields: [boardId],references: [id],onUpdate: Cascade,onDelete: Cascade)
   startDate        DateTime      @default(now())    @map("start_date")
   dueDate          DateTime                         @map("due_date")  
-  createdAt        DateTime     @default(now())     @map("created_at")
-  updatedAt        DateTime     @updatedAt()
+  createdAt        DateTime      @default(now())     @map("created_at")
+  updatedAt        DateTime      @updatedAt()        @map("updated_at")
   label            label[]
   file             file[]
   members  taskAssignOnMember[]
@@ -128,7 +141,8 @@ model label {
   title             String      @db.String()
   taskId            String      @db.String()    @map("task_id")
   task              task        @relation(fields: [taskId],references: [id],onUpdate: Cascade,onDelete: NoAction)
-
+  createdAt      DateTime       @default(now())   @map("created_at")
+  updatedAt      DateTime       @updatedAt        @map("updated_at")
   @@map("labels") 
 }
 
@@ -137,10 +151,10 @@ model file {
   name              String      @db.String()
   link              String      @db.String()
   taskId            String      @map("task_id")
-  task              task       @relation(fields: [taskId],references: [id],onUpdate: Cascade,onDelete: Cascade)
+  task              task        @relation(fields: [taskId],references: [id],onUpdate: Cascade,onDelete: Cascade)
 
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  createdAt         DateTime    @default(now())   @map("created_at")
+  updatedAt         DateTime    @updatedAt        @map("updated_at")
 
   @@map("files")
 }

@@ -20,14 +20,7 @@ export class organizationQuery {
         try {
             return await this.prisma.$queryRaw(
                 Prisma.sql`
-                     SELECT 
-                     public.organizations.id  AS organization_id,
-                     public.organizations.name AS organization_name,
-                     public.teams.name AS team_name,
-                     public.teams.id  AS team_id
-                     FROM public.organizations
-                     JOIN public.teams
-                     ON public.organizations.id=public.teams.organization_id
+                    SELECT * FROM public.organizations
           `,
             );
         } catch (err) {
@@ -42,7 +35,7 @@ export class organizationQuery {
     ): Promise<any> {
         const newDate = new Date();
         await this.prisma.$executeRaw`INSERT INTO public.organizations
-                    (id,name,status,"createdAt","updatedAt") 
+                    (id,name,status,created_at,updated_at) 
                      VALUES(${uuid},${dto.name},${status},${newDate},${newDate}) `;
 
         return await this.findOrganizationById(uuid);
@@ -55,7 +48,7 @@ export class organizationQuery {
                 await this.prisma.$executeRaw`UPDATE public.organizations 
                                                             SET name=${dto.name},
                                                                 status=${status},
-                                                                "updatedAt"=${newDate}
+                                                                updated_at=${newDate}
                                                             WHERE id=${id}`;
                 return await this.findOrganizationById(id);
             }

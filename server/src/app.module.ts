@@ -9,6 +9,8 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { TeamModule } from './team/team.module';
 import { OrganizationModule } from './organization/organization.module';
+import { MemberModule } from './member/member.module';
+import { ProjectModule } from './project/project.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { OrganizationModule } from './organization/organization.module';
     }),
     TeamModule,
     OrganizationModule,
+    MemberModule,
+    ProjectModule,
   ],
   controllers: [AppController],
   providers: [AppService],

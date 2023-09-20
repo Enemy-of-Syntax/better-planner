@@ -7,12 +7,29 @@ Table users {
   email String [unique, not null]
   name String [not null]
   password String [not null]
-  organizationId String [not null]
-  organization organizations [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
   member members [not null]
   team teams [not null]
+}
+
+Table projects {
+  id String [pk]
+  name String [not null]
+  status PROJECT_STATUS [not null, default: 'ONGOING']
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  ProjectOnOrganization project_on_organizations [not null]
+}
+
+Table project_on_organizations {
+  id String [pk]
+  organizationId String [not null]
+  organization organizations [not null]
+  projectId String [not null]
+  project projects [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
 }
 
 Table organizations {
@@ -21,9 +38,8 @@ Table organizations {
   status ORGANIZATION_STATUS [not null, default: 'ACTIVE']
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
-  user users [not null]
   team teams [not null]
-  project projects [not null]
+  ProjectOnOrganization project_on_organizations [not null]
   board boards [not null]
 }
 
@@ -45,7 +61,7 @@ Table members {
   team teams [not null]
   userId String [not null]
   user users [not null]
-  role MEMEBER_ROLE [not null, default: 'MEMBER']
+  role MEMBER_ROLE [not null, default: 'MEMBER']
   status MEMBER_STATUS [not null, default: 'ACTIVE']
   tasks taskAssignOnMember [not null]
 }
@@ -58,29 +74,11 @@ Table taskAssignOnMember {
   task tasks [not null]
 }
 
-Table projects {
-  id String [pk]
-  name String [not null]
-  organizationId String [not null]
-  organization organizations [not null]
-  stauts PROJECT_STATUS [not null, default: 'ONGOING']
-  createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime [not null]
-}
-
 Table boards {
   id String [pk]
   name String [not null]
   organizationId String [not null]
   organization organizations [not null]
-  list lists [not null]
-}
-
-Table lists {
-  id String [pk]
-  title String [not null]
-  boardId String [not null]
-  board boards [not null]
   task tasks [not null]
 }
 
@@ -88,10 +86,12 @@ Table tasks {
   id String [pk]
   title String [not null]
   description String [not null]
+  boardId String [not null]
+  board boards [not null]
   startDate DateTime [default: `now()`, not null]
   dueDate DateTime [not null]
-  listId String [not null]
-  list lists [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
   label labels [not null]
   file files [not null]
   members taskAssignOnMember [not null]
@@ -126,7 +126,7 @@ Enum PROJECT_STATUS {
   COMPLETED
 }
 
-Enum MEMEBER_ROLE {
+Enum MEMBER_ROLE {
   ADMIN
   MEMBER
 }
@@ -139,7 +139,9 @@ Enum MEMBER_STATUS {
   OUT_OF_OFFICE
 }
 
-Ref: users.organizationId > organizations.id [delete: Cascade]
+Ref: project_on_organizations.organizationId > organizations.id [delete: No Action]
+
+Ref: project_on_organizations.projectId > projects.id [delete: Cascade]
 
 Ref: teams.organizationId > organizations.id [delete: Cascade]
 
@@ -153,13 +155,9 @@ Ref: taskAssignOnMember.memberId > members.id [delete: Cascade]
 
 Ref: taskAssignOnMember.taskId > tasks.id [delete: Cascade]
 
-Ref: projects.organizationId > organizations.id [delete: Cascade]
-
 Ref: boards.organizationId > organizations.id [delete: No Action]
 
-Ref: lists.boardId > boards.id [delete: No Action]
-
-Ref: tasks.listId > lists.id [delete: No Action]
+Ref: tasks.boardId > boards.id [delete: Cascade]
 
 Ref: labels.taskId > tasks.id [delete: No Action]
 
