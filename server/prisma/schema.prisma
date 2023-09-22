@@ -15,9 +15,11 @@ datasource db {
 }
 
 model user {
-  id             String       @id @default(uuid()) 
+  id             String       @id @default(uuid())  @unique
   email          String       @unique
   name           String       @db.String()
+  imageId        String?      @unique
+  image          file?        @relation(fields: [imageId],references: [id],onDelete: SetNull,onUpdate: Cascade)
   password       String       @db.String()
   createdAt      DateTime     @default(now())     @map("created_at")
   updatedAt      DateTime     @updatedAt          @map("updated_at")
@@ -30,6 +32,8 @@ model user {
 model project {
   id             String             @id @default(uuid())
   name           String             @db.String()     @unique
+  imageId        String?            @db.String()   
+  image          file?              @relation(fields: [imageId],references: [id],onDelete:Cascade ,onUpdate: Cascade)
   status         PROJECT_STATUS     @default(ONGOING)
   createdAt      DateTime           @default(now())    @map("created_at")
   updatedAt      DateTime           @updatedAt         @map("updated_at")
@@ -38,11 +42,11 @@ model project {
 }
 
 model ProjectOnOrganization {
-  id                    String      @id @default(uuid())
-  organizationId        String      @db.String()     @map("organization_id")
+  id                    String       @id @default(uuid())
+  organizationId        String       @db.String()     @map("organization_id")
   organization          organization @relation(fields: [organizationId],references: [id],onUpdate: Cascade,onDelete: NoAction)
-  projectId             String      @db.String()      @map("project_id")
-  project               project       @relation(fields: [projectId],references: [id],onUpdate:Cascade ,onDelete:Cascade )
+  projectId             String       @db.String()      @map("project_id")
+  project               project      @relation(fields: [projectId],references: [id],onUpdate:Cascade ,onDelete:Cascade )
   createdAt             DateTime     @default(now())  @map("created_at")
   updatedAt             DateTime     @updatedAt       @map("updated_at")
   @@map("project_on_organizations")
@@ -50,9 +54,11 @@ model ProjectOnOrganization {
 
 
 model organization {
-  id     String                           @id @default(uuid())
-  name   String                           @unique
-  status ORGANIZATION_STATUS              @default(ACTIVE)
+  id         String                       @id @default(uuid())
+  name       String                       @unique
+  imageId    String?                      @db.String()      @map("image_id")
+  image      file?                        @relation(fields: [imageId],references: [id],onDelete: Cascade,onUpdate: Cascade) 
+  status    ORGANIZATION_STATUS           @default(ACTIVE)
   createdAt DateTime  @default(now())     @map("created_at")
   updatedAt DateTime  @updatedAt          @map("updated_at")
 
@@ -66,6 +72,8 @@ model organization {
 model team {
   id             String       @id @default(uuid())
   name           String
+  imageId        String?      @db.String()     @map("image_id")
+  image          file?        @relation(fields: [imageId],references: [id],onDelete:Cascade ,onUpdate:Cascade )
   organizationId String       @map("organization_id")
   organization   organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdUserId  String       @map("created_user_id")
@@ -107,10 +115,10 @@ model taskAssignOnMember {
 
 
 model board {
-  id              String        @id @default(uuid())
-  name            String        @db.String()
-  organizationId  String        @map("organization_id")
-  organization    organization  @relation(fields: [organizationId],references: [id],onDelete:NoAction ,onUpdate:Cascade )
+  id               String        @id @default(uuid())
+  name             String        @db.String()
+  organizationId   String        @db.String() @map("organization_id")
+  organization     organization  @relation(fields: [organizationId],references: [id],onDelete:NoAction ,onUpdate:Cascade )
   createdAt        DateTime     @default(now())  @map("created_at")
   updatedAt        DateTime     @updatedAt       @map("updated_at")
   task             task[]
@@ -143,18 +151,21 @@ model label {
   task              task        @relation(fields: [taskId],references: [id],onUpdate: Cascade,onDelete: NoAction)
   createdAt      DateTime       @default(now())   @map("created_at")
   updatedAt      DateTime       @updatedAt        @map("updated_at")
+  
   @@map("labels") 
 }
 
 model file {
-  id                String      @id @default(uuid())
+  id                String      @id @default(uuid())  @unique
   name              String      @db.String()
-  link              String      @db.String()
-  taskId            String      @map("task_id")
-  task              task        @relation(fields: [taskId],references: [id],onUpdate: Cascade,onDelete: Cascade)
-
+  path              String      @db.String()
   createdAt         DateTime    @default(now())   @map("created_at")
   updatedAt         DateTime    @updatedAt        @map("updated_at")
+  user              user?
+  project           project[]
+  organization      organization[]
+  team              team[]
+  task              task[]
 
   @@map("files")
 }

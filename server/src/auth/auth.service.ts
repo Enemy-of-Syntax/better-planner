@@ -12,27 +12,47 @@ import { JwtService } from '@nestjs/jwt';
 import { Responser } from 'libs/Responser';
 import { QueryService } from './auth.sql';
 import { v4 as uuidV4 } from 'uuid';
+import { user } from '@prisma/client';
+
+interface imageType {
+    id: string | undefined;
+    path: string | undefined;
+    name: string | undefined;
+}
 @Injectable()
 export class AuthService {
-    constructor(
-        private readonly prisma: PrismaService,
-        private readonly jwt: JwtService,
-        private queryService: QueryService,
-    ) {}
+    constructor(private readonly jwt: JwtService, private queryService: QueryService) {}
 
-    async registerUser(dto: registerUserDto) {
-        const { email, password, name, organizationId } = dto;
+    async registerUser(dto: registerUserDto, Image?: Express.Multer.File) {
+        const { email, password, name } = dto;
+        console.log(dto);
         try {
+            const isUserAlrExist: user[] = await this.queryService.findUserByEmail(dto.email);
+            if (isUserAlrExist.length > 0) throw new Error('credentials already taken');
+
             const hashPw = await argon.hash(password);
             const uuid: string = await uuidV4();
+
+            let image: imageType = { id: '', name: '', path: '' };
+            if (Image) {
+                image = await this.queryService.insertPhoto({
+                    name: Image.filename,
+                    path: Image.path,
+                });
+            }
+
+            console.log('service', image);
 
             const createUser = await this.queryService.insertNewUser({
                 id: uuid,
                 email,
                 name,
                 password: hashPw,
-                organizationId,
+                ...(image && {
+                    imageId: image.id === '' ? null : image.id,
+                }),
             });
+            console.log('after created');
 
             return Responser({
                 statusCode: 201,
@@ -40,13 +60,13 @@ export class AuthService {
                 devMessage: 'new user created!',
                 body: createUser,
             });
-        } catch (err) {
+        } catch (err: any) {
             throw new HttpException(
                 {
-                    message: 'error',
-                    devMessage: 'user register failed',
+                    message: 'Failed to register new user',
+                    devMessage: 'Failed to register new user',
                 },
-                401,
+                400,
             );
         }
     }
@@ -54,7 +74,7 @@ export class AuthService {
     async loginUser(dto: loginUserDto) {
         const { email, password } = dto;
         try {
-            const foundUser = await this.queryService.findUserByEmail(email);
+            const foundUser: any = await this.queryService.findUserByEmail(email);
             if (!foundUser) throw new UnauthorizedException('Wrong credentials');
 
             const passwordMatch = await argon.verify(foundUser[0].password, password);
@@ -83,6 +103,7 @@ export class AuthService {
     }
 
     async profile(id: string) {
+        console.log(id);
         try {
             const profileUser = await this.queryService.findUserById(id);
             if (!profileUser) throw new NotFoundException('user not found');
@@ -104,6 +125,31 @@ export class AuthService {
         }
     }
 
+    async allProfile() {
+        try {
+            const allUsers: user[] = await this.queryService.findAllUsers();
+            if (!allUsers) throw new Error();
+
+            return Responser({
+                statusCode: 200,
+                message: 'fetched user list successfully',
+                devMessage: 'successfully fetched user list',
+                body: {
+                    count: allUsers.length,
+                    data: allUsers,
+                },
+            });
+        } catch (err: any) {
+            throw new HttpException(
+                {
+                    message: 'failed to fetched user list ',
+                    devMessage: err.message || '',
+                },
+                404,
+            );
+        }
+    }
+
     private async generateToken({ id, email }) {
         const payload = {
             id,
@@ -115,11 +161,14 @@ export class AuthService {
 
         const [accessToken, refreshToken] = await Promise.all([
             this.jwt.signAsync(payload, {
-                secret: process.env.SECRET_KEY,
+                secret: process.env.JWT_ACCESS_TOKEN,
                 expiresIn: '1d',
             }),
 
-            this.jwt.signAsync({ id: id }, { secret: process.env.REFRESH_KEY, expiresIn: '7d' }),
+            this.jwt.signAsync(
+                { id: id },
+                { secret: process.env.JWT_REFRESH_TOKEN, expiresIn: '7d' },
+            ),
         ]);
 
         return { accessToken, refreshToken };

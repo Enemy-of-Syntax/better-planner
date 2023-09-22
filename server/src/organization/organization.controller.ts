@@ -9,7 +9,8 @@ import { UpdateOrganizationDto, organizationDto } from './dto/organization.dto';
 export class OrganizationController {
     constructor(private readonly organizationService: OrganizationService) {}
     @ApiResponse({ status: 200, description: 'successfully get organizations' })
-    @ApiResponse({ status: 404, description: 'failed to get organizations' })
+    @ApiResponse({ status: 404, description: 'not found' })
+    @ApiResponse({ status: 401, description: 'bad request' })
     @ApiResponse({ status: 500, description: 'internal server error' })
     @Get('getAll')
     GetAll(): Promise<string | organization[]> {
@@ -22,7 +23,11 @@ export class OrganizationController {
     })
     @ApiResponse({
         status: 404,
-        description: 'failed to get organization detail',
+        description: 'not found',
+    })
+    @ApiResponse({
+        status: 401,
+        description: 'bad request',
     })
     @ApiResponse({ status: 500, description: 'internal server error' })
     @Get('detail/:id')
@@ -32,7 +37,7 @@ export class OrganizationController {
 
     @ApiResponse({ status: 200, description: 'successfully get organizations' })
     @ApiResponse({ status: 400, description: 'Bad request' })
-    @ApiResponse({ status: 404, description: 'failed to get organizations' })
+    @ApiResponse({ status: 404, description: 'not found' })
     @ApiResponse({ status: 500, description: 'internal server error' })
     @ApiQuery({ name: 'status', enum: ORGANIZATION_STATUS })
     @Post('create')
@@ -45,6 +50,7 @@ export class OrganizationController {
 
     @ApiResponse({ status: 201, description: 'successfully updated organizations' })
     @ApiResponse({ status: 400, description: 'Bad request' })
+    @ApiResponse({ status: 404, description: 'not found' })
     @ApiResponse({ status: 500, description: 'internal server error' })
     @ApiQuery({ name: 'status', enum: ORGANIZATION_STATUS })
     @Put('update/:id')
@@ -56,7 +62,8 @@ export class OrganizationController {
         return this.organizationService.updateOrganization(id, dto, status);
     }
 
-    @ApiResponse({ status: 204, description: 'successfully deleted organizations' })
+    @ApiResponse({ status: 200, description: 'successfully deleted organizations' })
+    @ApiResponse({ status: 404, description: 'not found' })
     @ApiResponse({ status: 400, description: 'Bad request' })
     @ApiResponse({ status: 500, description: 'internal server error' })
     @Delete('delete/:id')

@@ -6,6 +6,8 @@ Table users {
   id String [pk]
   email String [unique, not null]
   name String [not null]
+  imageId String [unique]
+  image files
   password String [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
@@ -15,7 +17,9 @@ Table users {
 
 Table projects {
   id String [pk]
-  name String [not null]
+  name String [unique, not null]
+  imageId String
+  image files
   status PROJECT_STATUS [not null, default: 'ONGOING']
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
@@ -35,6 +39,8 @@ Table project_on_organizations {
 Table organizations {
   id String [pk]
   name String [unique, not null]
+  imageId String
+  image files
   status ORGANIZATION_STATUS [not null, default: 'ACTIVE']
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
@@ -46,6 +52,8 @@ Table organizations {
 Table teams {
   id String [pk]
   name String [not null]
+  imageId String
+  image files
   organizationId String [not null]
   organization organizations [not null]
   createdUserId String [not null]
@@ -63,6 +71,8 @@ Table members {
   user users [not null]
   role MEMBER_ROLE [not null, default: 'MEMBER']
   status MEMBER_STATUS [not null, default: 'ACTIVE']
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
   tasks taskAssignOnMember [not null]
 }
 
@@ -72,6 +82,8 @@ Table taskAssignOnMember {
   member members [not null]
   taskId String [not null]
   task tasks [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
 }
 
 Table boards {
@@ -79,6 +91,8 @@ Table boards {
   name String [not null]
   organizationId String [not null]
   organization organizations [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
   task tasks [not null]
 }
 
@@ -103,16 +117,21 @@ Table labels {
   title String [not null]
   taskId String [not null]
   task tasks [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
 }
 
 Table files {
   id String [pk]
   name String [not null]
-  link String [not null]
-  taskId String [not null]
-  task tasks [not null]
+  path String [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
+  user users
+  project projects [not null]
+  organization organizations [not null]
+  team teams [not null]
+  task tasks [not null]
 }
 
 Enum ORGANIZATION_STATUS {
@@ -139,9 +158,17 @@ Enum MEMBER_STATUS {
   OUT_OF_OFFICE
 }
 
+Ref: users.imageId - files.id [delete: Set Null]
+
+Ref: projects.imageId > files.id [delete: Cascade]
+
 Ref: project_on_organizations.organizationId > organizations.id [delete: No Action]
 
 Ref: project_on_organizations.projectId > projects.id [delete: Cascade]
+
+Ref: organizations.imageId > files.id [delete: Cascade]
+
+Ref: teams.imageId > files.id [delete: Cascade]
 
 Ref: teams.organizationId > organizations.id [delete: Cascade]
 
@@ -160,5 +187,3 @@ Ref: boards.organizationId > organizations.id [delete: No Action]
 Ref: tasks.boardId > boards.id [delete: Cascade]
 
 Ref: labels.taskId > tasks.id [delete: No Action]
-
-Ref: files.taskId > tasks.id [delete: Cascade]
