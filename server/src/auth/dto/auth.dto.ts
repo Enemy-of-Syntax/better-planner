@@ -7,8 +7,6 @@ export class registerUserDto {
     }
 
     @ApiProperty()
-    @IsEmail()
-    @IsNotEmpty()
     email: string;
 
     @ApiProperty()

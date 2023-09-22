@@ -86,18 +86,18 @@ export class QueryService {
         );
 
         let findImageObj = imageArr[0];
-        console.log('query', findImageObj);
 
         return { id: findImageObj?.id, name: findImageObj?.name, path: findImageObj?.path };
     }
 
-    async updateUser({ id, email, imageId, name, password }): Promise<user | undefined> {
+    async updateUser({ id, email, imageId, name, password }) {
+        console.log(id, email, imageId, name, password);
         await this.prisma.$executeRaw`UPDATE public.users 
                                 SET email=${email},
                                     name=${name},
                                     password=${password},
-                                    updated_at=${new Date()}
-                                    "imageId"=${imageId && imageId},
+                                    updated_at=${new Date()},
+                                    "imageId"=${imageId && imageId}
                                 WHERE id=${id}
                                     `;
         let updArr: user[] | undefined = await this.findUserById(id);

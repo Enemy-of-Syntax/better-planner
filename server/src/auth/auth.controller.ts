@@ -4,6 +4,7 @@ import {
     Get,
     Header,
     Post,
+    Put,
     Req,
     Request,
     UploadedFile,
@@ -26,6 +27,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { fileStorage } from 'libs/file-storage';
 @Controller('auth')
 @ApiTags('auth')
+@ApiBearerAuth()
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
@@ -60,12 +62,13 @@ export class AuthController {
 
     @ApiResponse({ status: 200, description: 'token valid' })
     @ApiResponse({ status: 401, description: 'invalid token' })
-    @ApiBearerAuth()
     @UseGuards(AuthGuard)
     @ApiOperation({ summary: 'profile me' })
     @Get('profile/me')
-    getProfile(@Req() request: IauthRequest) {
+    getProfile(@Request() request: IauthRequest) {
+        console.log('reach');
         console.log(request);
+        console.log('reach');
         return this.authService.profile(request.user.id);
     }
 
@@ -76,7 +79,7 @@ export class AuthController {
     @ApiResponse({ status: 500, description: 'internal server error' })
     @ApiOperation({ summary: 'all users' })
     @Get('profile/all')
-    getAllProle() {
+    getAllProfile() {
         return this.authService.allProfile();
     }
 
@@ -87,9 +90,10 @@ export class AuthController {
     @ApiResponse({ status: 500, description: 'internal server error' })
     @ApiOperation({ summary: 'update user' })
     @ApiBody({ type: updateUserDto, description: 'update user' })
+    @ApiConsumes('multipart/form-data')
     @ApiBearerAuth()
     @UseGuards(AuthGuard)
-    @Get('profile/update')
+    @Put('profile/update')
     @UseInterceptors(FileInterceptor('image', fileStorage))
     updateProfile(
         @Body() dto: updateUserDto,
