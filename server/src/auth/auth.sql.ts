@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma, user, file } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { v4 as uuidV4 } from 'uuid';
+import { updateUserDto } from './dto';
 @Injectable()
 export class QueryService {
     constructor(private readonly prisma: PrismaService) {}
@@ -43,7 +44,7 @@ export class QueryService {
         );
     }
 
-    async findUserById(id: string): Promise<user> {
+    async findUserById(id: string): Promise<user[]> {
         return await this.prisma.$queryRaw(
             Prisma.sql`
             SELECT 
@@ -88,5 +89,18 @@ export class QueryService {
         console.log('query', findImageObj);
 
         return { id: findImageObj?.id, name: findImageObj?.name, path: findImageObj?.path };
+    }
+
+    async updateUser({ id, email, imageId, name, password }): Promise<user | undefined> {
+        await this.prisma.$executeRaw`UPDATE public.users 
+                                SET email=${email},
+                                    name=${name},
+                                    password=${password},
+                                    updated_at=${new Date()}
+                                    "imageId"=${imageId && imageId},
+                                WHERE id=${id}
+                                    `;
+        let updArr: user[] | undefined = await this.findUserById(id);
+        return updArr[0];
     }
 }

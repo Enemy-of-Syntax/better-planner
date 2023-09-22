@@ -5,6 +5,7 @@ import {
     Header,
     Post,
     Req,
+    Request,
     UploadedFile,
     UseGuards,
     UseInterceptors,
@@ -17,7 +18,7 @@ import {
     ApiResponse,
     ApiTags,
 } from '@nestjs/swagger';
-import { loginUserDto, registerUserDto } from './dto';
+import { loginUserDto, registerUserDto, updateUserDto } from './dto';
 import { AuthService } from './auth.service';
 import { IauthRequest } from 'src/@types/authRequest';
 import { AuthGuard } from './auth.guard';
@@ -64,6 +65,7 @@ export class AuthController {
     @ApiOperation({ summary: 'profile me' })
     @Get('profile/me')
     getProfile(@Req() request: IauthRequest) {
+        console.log(request);
         return this.authService.profile(request.user.id);
     }
 
@@ -76,5 +78,24 @@ export class AuthController {
     @Get('profile/all')
     getAllProle() {
         return this.authService.allProfile();
+    }
+
+    @ApiResponse({ status: 201, description: 'updated user  successfully' })
+    @ApiResponse({ status: 400, description: 'bad request' })
+    @ApiResponse({ status: 401, description: 'unauthorized' })
+    @ApiResponse({ status: 404, description: 'not found' })
+    @ApiResponse({ status: 500, description: 'internal server error' })
+    @ApiOperation({ summary: 'update user' })
+    @ApiBody({ type: updateUserDto, description: 'update user' })
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard)
+    @Get('profile/update')
+    @UseInterceptors(FileInterceptor('image', fileStorage))
+    updateProfile(
+        @Body() dto: updateUserDto,
+        @Req() req: IauthRequest,
+        @UploadedFile() image: Express.Multer.File,
+    ) {
+        return this.authService.updateProfile(dto, req.user.id, image);
     }
 }

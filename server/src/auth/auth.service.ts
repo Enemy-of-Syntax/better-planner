@@ -5,7 +5,7 @@ import {
     NotFoundException,
     UnauthorizedException,
 } from '@nestjs/common';
-import { loginUserDto, registerUserDto } from './dto';
+import { loginUserDto, registerUserDto, updateUserDto } from './dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
@@ -40,8 +40,6 @@ export class AuthService {
                     path: Image.path,
                 });
             }
-
-            console.log('service', image);
 
             const createUser = await this.queryService.insertNewUser({
                 id: uuid,
@@ -114,11 +112,11 @@ export class AuthService {
                 devMessage: 'success',
                 body: profileUser,
             });
-        } catch (err) {
+        } catch (err: any) {
             throw new HttpException(
                 {
-                    message: 'Unvalid',
-                    devMessage: 'Unvalid',
+                    message: 'InValid',
+                    devMessage: err.message || '',
                 },
                 401,
             );
@@ -146,6 +144,46 @@ export class AuthService {
                     devMessage: err.message || '',
                 },
                 404,
+            );
+        }
+    }
+
+    async updateProfile(dto: updateUserDto, id: string, Image?: Express.Multer.File) {
+        try {
+            const { email, name, password } = dto;
+            const isUserExist = await this.queryService.findUserById(id);
+            if (isUserExist.length === 0 || !isUserExist) throw new Error('user does not exist');
+
+            let image: imageType = { id: '', name: '', path: '' };
+            if (image) {
+                image = await this.queryService.insertPhoto({
+                    name: Image?.filename,
+                    path: Image?.path,
+                });
+            }
+            const updatedUser: user | undefined = await this.queryService.updateUser({
+                id,
+                email,
+                name,
+                password,
+                ...(image && {
+                    imageId: image.id === '' ? null : image.id,
+                }),
+            });
+
+            return Responser({
+                statusCode: 201,
+                message: 'profile updated successfully',
+                devMessage: 'profile updated successfully',
+                body: updatedUser,
+            });
+        } catch (err: any) {
+            throw new HttpException(
+                {
+                    message: 'Failed to update profile',
+                    devMessage: err.message || '',
+                },
+                400,
             );
         }
     }

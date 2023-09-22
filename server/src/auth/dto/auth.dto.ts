@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty } from 'class-validator';
 
 export class registerUserDto {
@@ -21,6 +21,7 @@ export class registerUserDto {
     public image?: string;
 }
 
+export class updateUserDto extends PartialType(registerUserDto) {}
 export class loginUserDto {
     constructor() {
         (this.email = ''), (this.password = '');
