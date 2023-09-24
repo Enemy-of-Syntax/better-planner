@@ -11,7 +11,10 @@ export class QueryService {
         return await this.prisma.$queryRaw(
             Prisma.sql`
             SELECT 
-            public.users.id,public.users.email,public.users.name AS user_name,
+            public.users.id,
+            public.users.email,
+            public.users.name AS user_name,
+            public.users.role,
             public.users."imageId",
             public.files.name AS image_name,
             public.files.path,
@@ -30,7 +33,10 @@ export class QueryService {
         return await this.prisma.$queryRaw(
             Prisma.sql`
             SELECT 
-            public.users.id,public.users.email,public.users.name AS user_name,
+            public.users.id,
+            public.users.email,
+            public.users.name AS user_name,
+            public.users.role,
             public.users."imageId",
             public.files.name AS image_name,
             public.files.path,
@@ -48,7 +54,10 @@ export class QueryService {
         return await this.prisma.$queryRaw(
             Prisma.sql`
             SELECT 
-            public.users.id,public.users.email,public.users.name AS user_name,
+            public.users.id,
+            public.users.email,
+            public.users.name AS user_name,
+            public.users.role,
             public.users."imageId",
             public.files.name AS image_name,
             public.files.path,
@@ -102,5 +111,13 @@ export class QueryService {
                                     `;
         let updArr: user[] | undefined = await this.findUserById(id);
         return updArr[0];
+    }
+
+    async updateUserRole(userId: string) {
+        await this.prisma.$executeRaw`UPDATE public.users   
+                                      SET role="ADMIN",
+                                         updated_at=${new Date()}
+                                      WHERE id =${userId}
+                                      `;
     }
 }

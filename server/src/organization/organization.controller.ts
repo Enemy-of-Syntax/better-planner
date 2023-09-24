@@ -1,11 +1,27 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Post,
+    Put,
+    Query,
+    Req,
+    Request,
+    UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ORGANIZATION_STATUS, organization } from '@prisma/client';
 import { OrganizationService } from './organization.service';
 import { UpdateOrganizationDto, organizationDto } from './dto/organization.dto';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { IauthRequest } from 'src/@types/authRequest';
 
 @Controller('organization')
 @ApiTags('organizations')
+@ApiBearerAuth()
+@UseGuards(AuthGuard)
 export class OrganizationController {
     constructor(private readonly organizationService: OrganizationService) {}
     @ApiResponse({ status: 200, description: 'successfully get organizations' })
@@ -43,9 +59,10 @@ export class OrganizationController {
     @Post('create')
     CreateOrganization(
         @Body() dto: organizationDto,
+        @Request() req: IauthRequest,
         @Query('status') status: ORGANIZATION_STATUS = ORGANIZATION_STATUS.ACTIVE,
     ): Promise<organization> {
-        return this.organizationService.createNewOrganization(dto, status);
+        return this.organizationService.createNewOrganization(dto, status, req.user.id);
     }
 
     @ApiResponse({ status: 201, description: 'successfully updated organizations' })

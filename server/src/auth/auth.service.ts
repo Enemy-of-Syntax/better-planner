@@ -25,7 +25,6 @@ export class AuthService {
 
     async registerUser(dto: registerUserDto, Image?: Express.Multer.File) {
         const { email, password, name } = dto;
-        console.log(dto);
         try {
             const isUserAlrExist: user[] = await this.queryService.findUserByEmail(dto.email);
             if (isUserAlrExist.length > 0) throw new Error('credentials already taken');

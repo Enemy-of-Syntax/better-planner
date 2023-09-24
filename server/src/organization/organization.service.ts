@@ -5,28 +5,27 @@ import { Responser } from 'libs/Responser';
 import { UpdateOrganizationDto, organizationDto } from './dto/organization.dto';
 import { error } from 'console';
 import { v4 as uuidV4 } from 'uuid';
+import { QueryService } from 'src/auth/auth.sql';
 
 @Injectable()
 export class OrganizationService {
-    constructor(private readonly orgQuery: organizationQuery) {}
+    constructor(
+        private readonly orgQuery: organizationQuery,
+        private readonly authQuery: QueryService,
+    ) {}
     async getAllOrganizations(): Promise<any> {
         try {
             const allOrganizations: organization[] | [] =
                 await this.orgQuery.findAllOrganizations();
-            if (allOrganizations.length <= 0) {
-                return Responser({
-                    statusCode: 404,
-                    devMessage: 'No organizations are created yet',
-                    message: 'No organizations are created yet',
-                    body: allOrganizations,
-                });
-            } else
-                return Responser({
-                    statusCode: 200,
-                    devMessage: 'successfully  get all organizations',
-                    message: 'successfully get all organizations',
-                    body: allOrganizations,
-                });
+
+            if (!allOrganizations) throw new Error();
+
+            return Responser({
+                statusCode: 200,
+                devMessage: 'successfully  get all organizations',
+                message: 'successfully get all organizations',
+                body: allOrganizations,
+            });
         } catch (err) {
             throw new HttpException(
                 {
@@ -50,7 +49,7 @@ export class OrganizationService {
                     body: organizationDetail,
                 });
             } else {
-                throw Error;
+                throw new Error();
             }
         } catch (err) {
             throw new HttpException(
@@ -63,9 +62,17 @@ export class OrganizationService {
         }
     }
 
-    async createNewOrganization(dto: organizationDto, status: ORGANIZATION_STATUS): Promise<any> {
+    async createNewOrganization(
+        dto: organizationDto,
+        status: ORGANIZATION_STATUS,
+        userId: string,
+    ): Promise<any> {
         try {
             const uuid: string = await uuidV4();
+
+            const updateUserRole: any = await this.authQuery.updateUserRole(userId);
+            if (!updateUserRole) throw new Error('failed to update user role');
+
             const newOrganization = await this.orgQuery.insertNewOrganization(uuid, dto, status);
             if (!newOrganization) throw error;
 
