@@ -1,47 +1,65 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Post,
+    Put,
+    Request,
+    UploadedFile,
+    UseGuards,
+    UseInterceptors,
+} from '@nestjs/common';
 import { TeamService } from './team.service';
-import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { TeamDto, UpdateTeam } from './dto/team.dto';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { IauthRequest } from 'src/@types/authRequest';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { fileStorage } from 'libs/file-storage';
 
 @Controller('team')
 @ApiTags('team')
+@UseGuards(AuthGuard)
+@ApiBearerAuth()
 export class TeamController {
     constructor(private readonly teamService: TeamService) {}
 
-    @ApiResponse({ status: 200, description: 'successful' })
-    @ApiResponse({ status: 404, description: 'failed to get all teams' })
     @Get('getAll')
     GetAllTeams() {
         return this.teamService.getAllTeams();
     }
 
-    @ApiResponse({ status: 200, description: 'successful' })
-    @ApiResponse({ status: 404, description: 'failed to get team detail' })
     @Get('detail/:id')
     GetTeam(@Param('id') id: string) {
         return this.teamService.getSingleTeam(id);
     }
 
-    @ApiResponse({ status: 201, description: 'successfully created new team' })
-    @ApiResponse({ status: 401, description: 'bad request ' })
-    @ApiResponse({ status: 500, description: 'internal server error' })
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({ type: TeamDto, description: 'create new Team' })
+    @UseInterceptors(FileInterceptor('image', fileStorage))
     @Post('create')
-    CreateTeam(@Body() dto: TeamDto) {
-        return this.teamService.createNewTeam(dto);
+    CreateTeam(
+        @Body() dto: TeamDto,
+        @Request() req: IauthRequest,
+        @UploadedFile() Image?: Express.Multer.File,
+    ) {
+        return this.teamService.createNewTeam(dto, req.user.id, Image);
     }
 
-    @ApiResponse({ status: 200, description: 'successfully edited new team' })
-    @ApiResponse({ status: 401, description: 'Bad request' })
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({ type: UpdateTeam, description: 'update team' })
+    @UseInterceptors(FileInterceptor('image', fileStorage))
     @Put('update/:id')
-    UpdateTeam(@Body() dto: UpdateTeam, @Param('id') id: string) {
-        return this.teamService.editTeam(id, dto);
+    UpdateTeam(
+        @Body() dto: UpdateTeam,
+        @Param('id') id: string,
+        @UploadedFile() image?: Express.Multer.File,
+    ) {
+        return this.teamService.editTeam(id, dto, image);
     }
 
-    @ApiResponse({ status: 200, description: 'successfully deleted!' })
-    @ApiResponse({
-        status: 404,
-        description: 'item not found for delete request!',
-    })
     @Delete('delete/:id')
     DeleteTeam(@Param('id') id: string) {
         return this.teamService.removeTeam(id);

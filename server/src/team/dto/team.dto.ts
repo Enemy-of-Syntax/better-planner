@@ -3,23 +3,19 @@ import { ApiProperty, ApiQuery, PartialType } from '@nestjs/swagger';
 import { IsNotEmpty } from 'class-validator';
 
 export class TeamDto {
-  constructor() {
-    this.name = '';
-    this.organizationId = '';
-    this.createdUserId = '';
-  }
+    constructor() {
+        this.name = '';
+        this.organizationId = '';
+    }
 
-  @ApiProperty()
-  @IsNotEmpty()
-  name: string;
+    @ApiProperty()
+    name: string;
 
-  @ApiProperty()
-  @IsNotEmpty()
-  organizationId: string;
+    @ApiProperty()
+    organizationId: string;
 
-  @ApiProperty()
-  @IsNotEmpty()
-  createdUserId: string;
+    @ApiProperty({ type: 'string', format: 'binary', required: false })
+    public image?: string[];
 }
 
 export class UpdateTeam extends PartialType(TeamDto) {}

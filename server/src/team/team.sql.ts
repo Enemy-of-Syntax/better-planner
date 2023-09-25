@@ -14,23 +14,63 @@ export class TeamQuery {
     ) {}
 
     async findAllTeams() {
-        return this.prisma.$queryRaw(Prisma.sql`SELECT * FROM public.teams`);
+        return this.prisma.$queryRaw(Prisma.sql`
+            SELECT 
+            public.teams.id,
+            public.teams.name AS team_name,
+            public.teams.image_id AS team_image_id,
+            public.files.name AS team_image_name,
+            public.files.path AS team_image_path,
+            public.teams.organization_id AS team_org_id,
+            public.organizations.name AS team_org_name,
+            public.organizations.status AS team_org_status,
+            public.teams.created_user_id AS created_user_id,
+            public.users.name AS created_user_name,
+            public.teams.created_at,
+            public.teams.updated_at
+
+            FROM public.teams
+
+            LEFT JOIN public.files ON public.teams.image_id = public.files.id
+            LEFT JOIN public.users ON public.teams.created_user_id=public.users.id
+            LEFT JOIN public.organizations ON public.teams.organization_id=public.organizations.id
+            `);
     }
 
     async findSingleTeam(id: string): Promise<team> {
-        return this.prisma.$queryRaw(
-            Prisma.sql`SELECT * FROM public.teams 
-       WHERE id=${id}`,
-        );
+        return this.prisma.$queryRaw(Prisma.sql`
+        SELECT 
+        public.teams.id,
+        public.teams.name AS team_name,
+        public.teams.image_id AS team_image_id,
+        public.files.name AS team_image_name,
+        public.files.path AS team_image_path,
+        public.teams.organization_id AS team_org_id,
+        public.organizations.name AS team_org_name,
+        public.organizations.status AS team_org_status,
+        public.teams.created_user_id AS created_user_id,
+        public.users.name AS created_user_name,
+        public.teams.created_at,
+        public.teams.updated_at
+
+        FROM public.teams
+
+        LEFT JOIN public.files ON public.teams.image_id = public.files.id
+        LEFT JOIN public.users ON public.teams.created_user_id=public.users.id
+        LEFT JOIN public.organizations ON public.teams.organization_id=public.organizations.id
+        WHERE public.teams.id=${id}
+        `);
     }
 
-    async insertNewTeam({ id, name, organizationId, createdUserId }) {
+    async insertNewTeam({ id, name, organizationId, createdUserId, imageId }) {
         try {
             const newDate = new Date();
 
             await this.prisma.$executeRaw`INSERT INTO public.teams
-            (id,name,organization_id,created_user_id,created_at,updated_at)
-            VALUES (${id},${name},${organizationId},${createdUserId},${newDate},${newDate})`;
+            (id,name,image_id,organization_id,created_user_id,created_at,updated_at)
+            VALUES (${id},${name},${
+                imageId && imageId
+            },${organizationId},${createdUserId},${newDate},${newDate})`;
 
             return this.findSingleTeam(id);
         } catch (error) {
@@ -39,60 +79,28 @@ export class TeamQuery {
     }
 
     // Update section
-    async updateTeam(id: string, dto: UpdateTeam) {
-        const condition = false || undefined || null || '' || 'string';
-
-        //relation id are valid or not
-        const orgidValid = await this.orgQuery.findOrganizationById(
-            dto.organizationId ? dto.organizationId : '',
-        );
-        const userIdValid = await this.authQuery.findUserById(
-            dto.createdUserId ? dto.createdUserId : '',
-        );
-
-        if (dto.organizationId !== condition) {
-            if (orgidValid[0]) {
-                this.updateTeamByOrganizationId(id, orgidValid[0].id);
-            }
-        }
-
-        if (dto.createdUserId !== condition) {
-            if (userIdValid[0]) {
-                this.updateTeamByuserId(id, userIdValid[0].id);
-            }
-        }
-
-        if (dto.name === condition && dto.name.length <= 0) {
-            return false;
-        } else {
-            console.log('name update');
-            await this.updateTeamByName(id, dto);
-            return await this.findSingleTeam(id);
-        }
-    }
-
-    async updateTeamByName(id: string, dto: UpdateTeam) {
-        await this.prisma.$executeRaw`UPDATE public.teams
-                       SET name=${dto.name},
-                       updated_at=${new Date()}
-                       WHERE id=${id}`;
-    }
-
-    async updateTeamByOrganizationId(id: string, orgId: string) {
-        await this.prisma.$executeRaw`UPDATE public.teams
-      SET organization_id=${orgId},
-      updated_at=${new Date()}
-      WHERE id=${id}`;
-    }
-
-    async updateTeamByuserId(id: string, userId: string) {
-        await this.prisma.$executeRaw`UPDATE public.teams
-                    SET created_user_id=${userId}
-                    updated_at=${new Date()}
-                    WHERE id=${id}`;
+    async updateTeam(id: string, dto: UpdateTeam, imageId: string) {
+        const existingTeam = await this.findSingleTeam(id);
+        console.log(existingTeam);
+        await this.prisma.$executeRaw`UPDATE public.teams   
+                                      SET  name=${
+                                          dto.name === '' ? existingTeam[0].team_name : dto.name
+                                      },
+                                           organization_id=${
+                                               dto.organizationId === ''
+                                                   ? existingTeam[0].team_org_id
+                                                   : dto.organizationId
+                                           },
+                                           image_id=${imageId},
+                                           updated_at=${new Date()}
+                                     WHERE id=${id}
+                                           `;
+        return await this.findSingleTeam(id);
     }
 
     async deleteTeam(id: string) {
-        return this.prisma.$executeRaw`DELETE FROM public.teams WHERE id=${id}`.catch((err) => err);
+        return await this.prisma.$executeRaw`DELETE FROM public.teams WHERE id=${id}`.catch(
+            (err) => err,
+        );
     }
 }

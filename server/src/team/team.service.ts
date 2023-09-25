@@ -5,10 +5,12 @@ import { TeamDto, UpdateTeam } from './dto/team.dto';
 import { v4 as uuidV4 } from 'uuid';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { error } from 'console';
+import { imageType } from 'src/@types/imageType';
+import { QueryService } from 'src/auth/auth.sql';
 
 @Injectable()
 export class TeamService {
-    constructor(private readonly teamQuery: TeamQuery, private readonly prisma: PrismaService) {}
+    constructor(private readonly teamQuery: TeamQuery, private readonly authSql: QueryService) {}
 
     async getAllTeams() {
         try {
@@ -19,25 +21,33 @@ export class TeamService {
                 devMessage: 'success',
                 body: allTeams,
             });
-        } catch {
+        } catch (err: any) {
             throw new HttpException(
                 {
                     message: 'failed to get teams',
-                    devMessage: 'failed',
+                    devMessage: err.message || '',
                 },
                 404,
             );
         }
     }
 
-    async createNewTeam(dto: TeamDto) {
+    async createNewTeam(dto: TeamDto, userId: string, Image?: Express.Multer.File) {
         try {
             const uuid = await uuidV4();
+            let image: imageType = { id: '', name: '', path: '' };
+            if (Image) {
+                image = await this.authSql.insertPhoto({
+                    name: Image.filename,
+                    path: Image.path,
+                });
+            }
             const newTeam = await this.teamQuery.insertNewTeam({
                 id: uuid,
                 name: dto.name,
                 organizationId: dto.organizationId,
-                createdUserId: dto.createdUserId,
+                createdUserId: userId,
+                imageId: image.id === '' ? null : image.id,
             });
 
             return Responser({
@@ -46,11 +56,11 @@ export class TeamService {
                 devMessage: 'successfully created new team',
                 body: newTeam,
             });
-        } catch {
+        } catch (err: any) {
             throw new HttpException(
                 {
                     message: 'failed to create new team',
-                    devMessage: 'failed to create new team',
+                    devMessage: err.message || '',
                 },
                 400,
             );
@@ -79,27 +89,40 @@ export class TeamService {
         }
     }
 
-    async editTeam(id: string, dto: UpdateTeam) {
+    async editTeam(id: string, dto: UpdateTeam, Image?: Express.Multer.File) {
         try {
             const updateTeamExist = await this.teamQuery.findSingleTeam(id);
             if (!updateTeamExist) throw error;
 
-            const updateTeam = await this.teamQuery.updateTeam(id, dto);
+            let image: imageType = { id: '', name: '', path: '' };
+
+            if (Image) {
+                image = await this.authSql.insertPhoto({
+                    name: Image.filename,
+                    path: Image.path,
+                });
+            }
+
+            const updateTeam = await this.teamQuery.updateTeam(
+                id,
+                dto,
+                image.id === '' ? updateTeamExist[0].team_image_id : image.id,
+            );
             console.log(updateTeam);
             if (!updateTeam) throw error;
 
             return Responser({
                 statusCode: 200,
-                message: 'Succesfully updated team',
+                message: 'Successfully updated team',
                 devMessage: 'success',
                 body: updateTeam,
             });
-        } catch (err) {
+        } catch (err: any) {
             console.log(err);
             throw new HttpException(
                 {
                     message: 'Failed to edit team',
-                    devMessage: 'Failed to edit team',
+                    devMessage: err.message || '',
                 },
                 400,
             );
