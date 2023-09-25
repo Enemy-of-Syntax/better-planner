@@ -12,17 +12,23 @@ export class memberQuery {
         return await this.prisma.$queryRaw(Prisma.sql`
         SELECT
         m.id,
+        u2.id AS user_id,
+        u2.name AS member_name,
         m.role  AS member_role,
         m.status AS member_status,
         m.team_id AS member_team_id,
+        public.teams.name AS member_team_name,
         u1.name AS created_user_name,
-        u2.name AS member_name
+        m.created_at,
+        m.updated_at
     FROM
         public.members m
     LEFT JOIN
         public.users u1 ON m."createdUserId" = u1.id
     LEFT JOIN
-        public.users u2 ON m.user_id = u2.id;
+        public.users u2 ON m.user_id = u2.id
+    LEFT JOIN
+        public.teams ON m.team_id=public.teams.id
             `);
     }
 
@@ -31,6 +37,7 @@ export class memberQuery {
         SELECT
         m.id,
         u2.name AS member_name,
+        u1.id AS user_id,
         m.role  AS member_role,
         m.status AS member_status,
         m.team_id AS member_team_id,
@@ -73,9 +80,18 @@ export class memberQuery {
     }
 
     async updateMember(id: string, dto: UpdateMemberDto, status: MEMBER_STATUS, role: MEMBER_ROLE) {
+        const existingMember: any = await this.getSingleMember(id);
         await this.prisma.$executeRaw`UPDATE public.members 
-                                             SET team_id=${dto.teamId},
-                                                  user_id=${dto.userId},
+                                             SET team_id=${
+                                                 dto.teamId === ''
+                                                     ? existingMember[0].member_team_id
+                                                     : dto.teamId
+                                             },
+                                                  user_id=${
+                                                      dto.userId === ''
+                                                          ? existingMember[0].user_id
+                                                          : dto.userId
+                                                  },
                                                   role=${role},
                                                   status=${status}
                                     WHERE id = ${id}

@@ -17,7 +17,7 @@ async function bootstrap() {
         .setDescription('PMS API')
         .setVersion('1.0')
         .build();
-
+    console.log(new Date());
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api', app, document);
     await app.listen(Number(PORT));
