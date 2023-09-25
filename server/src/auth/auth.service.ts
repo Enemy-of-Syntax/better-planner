@@ -56,7 +56,7 @@ export class AuthService {
             throw new HttpException(
                 {
                     message: 'Failed to register new user',
-                    devMessage: 'Failed to register new user',
+                    devMessage: err.message || '',
                 },
                 400,
             );

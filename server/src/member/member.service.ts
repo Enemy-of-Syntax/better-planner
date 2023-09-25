@@ -10,7 +10,12 @@ import { v4 as uuidV4 } from 'uuid';
 @Injectable()
 export class MemberService {
     constructor(private readonly memberQuery: memberQuery) {}
-    async create(createMemberDto: CreateMemberDto, status: MEMBER_STATUS, role: MEMBER_ROLE) {
+    async create(
+        createMemberDto: CreateMemberDto,
+        status: MEMBER_STATUS,
+        role: MEMBER_ROLE,
+        createdUserId: string,
+    ) {
         try {
             const memberAlreadyExist: any = await this.memberQuery.findMemberByUserId(
                 createMemberDto.userId,
@@ -23,6 +28,7 @@ export class MemberService {
                 createMemberDto,
                 status,
                 role,
+                createdUserId,
             );
             if (!newMember) throw error;
 

@@ -1,12 +1,28 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Put, Query } from '@nestjs/common';
+import {
+    Controller,
+    Get,
+    Post,
+    Body,
+    Patch,
+    Param,
+    Delete,
+    Put,
+    Query,
+    Request,
+    UseGuards,
+} from '@nestjs/common';
 import { MemberService } from './member.service';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
-import { ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { MEMBER_ROLE, MEMBER_STATUS } from '@prisma/client';
+import { IauthRequest } from 'src/@types/authRequest';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 @Controller('member')
 @ApiTags('member')
+@UseGuards(AuthGuard)
+@ApiBearerAuth()
 export class MemberController {
     constructor(private readonly memberService: MemberService) {}
 
@@ -15,13 +31,16 @@ export class MemberController {
     @ApiResponse({ status: 500, description: 'internal server error' })
     @ApiQuery({ name: 'status', enum: MEMBER_STATUS })
     @ApiQuery({ name: 'role', enum: MEMBER_ROLE })
+    @ApiBody({ type: CreateMemberDto, description: 'create member' })
     @Post('create')
     create(
         @Body() createMemberDto: CreateMemberDto,
         @Query('status') status: MEMBER_STATUS = MEMBER_STATUS.ACTIVE,
         @Query('role') role: MEMBER_ROLE = MEMBER_ROLE.ADMIN,
+        @Request() req: IauthRequest,
     ) {
-        return this.memberService.create(createMemberDto, status, role);
+        console.log(req);
+        return this.memberService.create(createMemberDto, status, role, req.user.id);
     }
 
     @ApiResponse({ status: 200, description: 'successfully fetched all teams' })
