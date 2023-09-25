@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty } from 'class-validator';
 import { PartialType } from '@nestjs/swagger';
 
 export class organizationDto {
@@ -7,8 +6,10 @@ export class organizationDto {
         this.name = '';
     }
     @ApiProperty()
-    @IsNotEmpty()
     name: string;
+
+    @ApiProperty({ type: 'string', format: 'binary', required: false })
+    public image?: string;
 }
 
 export class UpdateOrganizationDto extends PartialType(organizationDto) {}

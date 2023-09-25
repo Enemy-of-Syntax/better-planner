@@ -6,19 +6,14 @@ import {
     UnauthorizedException,
 } from '@nestjs/common';
 import { loginUserDto, registerUserDto, updateUserDto } from './dto';
-import { PrismaService } from 'src/prisma/prisma.service';
-import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { Responser } from 'libs/Responser';
 import { QueryService } from './auth.sql';
 import { v4 as uuidV4 } from 'uuid';
 import { user } from '@prisma/client';
+import { imageType } from 'src/@types/imageType';
+import * as argon from 'argon2';
 
-interface imageType {
-    id: string | undefined;
-    path: string | undefined;
-    name: string | undefined;
-}
 @Injectable()
 export class AuthService {
     constructor(private readonly jwt: JwtService, private queryService: QueryService) {}

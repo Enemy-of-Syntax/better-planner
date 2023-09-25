@@ -6,6 +6,7 @@ import { UpdateOrganizationDto, organizationDto } from './dto/organization.dto';
 import { error } from 'console';
 import { v4 as uuidV4 } from 'uuid';
 import { QueryService } from 'src/auth/auth.sql';
+import { imageType } from 'src/@types/imageType';
 
 @Injectable()
 export class OrganizationService {
@@ -17,7 +18,7 @@ export class OrganizationService {
         try {
             const allOrganizations: organization[] | [] =
                 await this.orgQuery.findAllOrganizations();
-
+            console.log(allOrganizations);
             if (!allOrganizations) throw new Error();
 
             return Responser({
@@ -26,11 +27,11 @@ export class OrganizationService {
                 message: 'successfully get all organizations',
                 body: allOrganizations,
             });
-        } catch (err) {
+        } catch (err: any) {
             throw new HttpException(
                 {
                     message: 'failed to get all organizations',
-                    devMessage: 'failed to get all organizations',
+                    devMessage: err.message || '',
                 },
                 404,
             );
@@ -41,6 +42,8 @@ export class OrganizationService {
         try {
             const organizationDetail: organization[] | [] =
                 await this.orgQuery.findOrganizationById(id);
+            console.log(organizationDetail);
+
             if (organizationDetail.length > 0) {
                 return Responser({
                     statusCode: 200,
@@ -51,11 +54,11 @@ export class OrganizationService {
             } else {
                 throw new Error();
             }
-        } catch (err) {
+        } catch (err: any) {
             throw new HttpException(
                 {
                     message: 'failed to get organization detail',
-                    devMessage: 'failed to get organization detail',
+                    devMessage: err.message || '',
                 },
                 404,
             );
@@ -66,14 +69,30 @@ export class OrganizationService {
         dto: organizationDto,
         status: ORGANIZATION_STATUS,
         userId: string,
+        Image?: Express.Multer.File,
     ): Promise<any> {
         try {
-            const uuid: string = await uuidV4();
+            const id: string = await uuidV4();
 
-            const updateUserRole: any = await this.authQuery.updateUserRole(userId);
-            if (!updateUserRole) throw new Error('failed to update user role');
+            // const updateUserRole: any = await this.authQuery.updateUserRole(userId);
+            // console.log(updateUserRole);
+            // if (!updateUserRole) throw new Error('failed to update user role');
 
-            const newOrganization = await this.orgQuery.insertNewOrganization(uuid, dto, status);
+            let image: imageType = { id: '', name: '', path: '' };
+            if (Image) {
+                image = await this.authQuery.insertPhoto({
+                    name: Image.filename,
+                    path: Image.path,
+                });
+            }
+
+            const newOrganization = await this.orgQuery.insertNewOrganization(
+                id,
+                dto,
+                image.id !== '' ? image.id : null,
+                userId,
+                status,
+            );
             if (!newOrganization) throw error;
 
             return Responser({
@@ -82,11 +101,11 @@ export class OrganizationService {
                 devMessage: 'new organization created!',
                 body: newOrganization,
             });
-        } catch (err) {
+        } catch (err: any) {
             throw new HttpException(
                 {
                     message: 'Failed to create new organization',
-                    devMessage: 'Failed to create new organization',
+                    devMessage: err.message || '',
                 },
                 400,
             );
