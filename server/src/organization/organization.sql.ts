@@ -91,12 +91,29 @@ export class organizationQuery {
         return await this.findOrganizationById(id);
     }
 
-    async updateOrganization(id: string, dto: UpdateOrganizationDto, status: ORGANIZATION_STATUS) {
+    async updateOrganization(
+        id: string,
+        dto: UpdateOrganizationDto,
+        status: ORGANIZATION_STATUS,
+        imageId: string | undefined | '',
+    ) {
         try {
-            if (dto.name !== '' || undefined || null || false) {
+            const existOrganization: any = await this.findOrganizationById(id);
+            console.log(existOrganization);
+            if (dto.name !== undefined || null || false) {
                 const newDate = new Date();
                 await this.prisma.$executeRaw`UPDATE public.organizations 
-                                                            SET name=${dto.name},
+                                                            SET name=${
+                                                                dto.name === ''
+                                                                    ? existOrganization[0].org_name
+                                                                    : dto.name
+                                                            },
+                                                                image_id=${
+                                                                    imageId === ''
+                                                                        ? existOrganization[0]
+                                                                              .org_image_id
+                                                                        : imageId
+                                                                },
                                                                 status=${status},
                                                                 updated_at=${newDate}
                                                             WHERE id=${id}`;

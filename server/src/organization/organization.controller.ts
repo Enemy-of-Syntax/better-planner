@@ -77,13 +77,16 @@ export class OrganizationController {
     @ApiResponse({ status: 404, description: 'not found' })
     @ApiResponse({ status: 500, description: 'internal server error' })
     @ApiQuery({ name: 'status', enum: ORGANIZATION_STATUS })
+    @ApiConsumes('multipart/form-data')
+    @UseInterceptors(FileInterceptor('image', fileStorage))
     @Put('update/:id')
     UpdatedOrganization(
         @Param('id') id: string,
         @Body() dto: UpdateOrganizationDto,
         @Query('status') status: ORGANIZATION_STATUS = ORGANIZATION_STATUS.ACTIVE,
+        @UploadedFile() image?: Express.Multer.File,
     ): Promise<any> {
-        return this.organizationService.updateOrganization(id, dto, status);
+        return this.organizationService.updateOrganization(id, dto, status, image);
     }
 
     @ApiResponse({ status: 200, description: 'successfully deleted organizations' })

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, user, file } from '@prisma/client';
+import { Prisma, user, file, USER_ROLE } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { v4 as uuidV4 } from 'uuid';
 import { updateUserDto } from './dto';
@@ -114,10 +114,10 @@ export class QueryService {
     }
 
     async updateUserRole(userId: string) {
-        await this.prisma.$executeRaw`UPDATE public.users   
-                                      SET role="ADMIN",
-                                         updated_at=${new Date()}
-                                      WHERE id =${userId}
+        return await this.prisma.$executeRaw`UPDATE public.users   
+                                      SET role=${USER_ROLE.ADMIN},
+                                          updated_at=${new Date()}
+                                          WHERE public.users.id=${userId}
                                       `;
     }
 }

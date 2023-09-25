@@ -74,9 +74,9 @@ export class OrganizationService {
         try {
             const id: string = await uuidV4();
 
-            // const updateUserRole: any = await this.authQuery.updateUserRole(userId);
-            // console.log(updateUserRole);
-            // if (!updateUserRole) throw new Error('failed to update user role');
+            const updateUserRole: any = await this.authQuery.updateUserRole(userId);
+            console.log(updateUserRole);
+            if (!updateUserRole) throw new Error('failed to update user role');
 
             let image: imageType = { id: '', name: '', path: '' };
             if (Image) {
@@ -112,9 +112,27 @@ export class OrganizationService {
         }
     }
 
-    async updateOrganization(id: string, dto: UpdateOrganizationDto, status: ORGANIZATION_STATUS) {
+    async updateOrganization(
+        id: string,
+        dto: UpdateOrganizationDto,
+        status: ORGANIZATION_STATUS,
+        Image?: Express.Multer.File,
+    ) {
         try {
-            const updatedOrganization = await this.orgQuery.updateOrganization(id, dto, status);
+            let image: imageType = { id: '', name: '', path: '' };
+            if (Image) {
+                image = await this.authQuery.insertPhoto({
+                    name: Image.filename,
+                    path: Image.path,
+                });
+            }
+
+            const updatedOrganization = await this.orgQuery.updateOrganization(
+                id,
+                dto,
+                status,
+                image.id && image.id,
+            );
             if (!updatedOrganization) throw error;
 
             return Responser({
