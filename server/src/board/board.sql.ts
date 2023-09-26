@@ -56,9 +56,19 @@ export class BoardSql {
     }
 
     async updateBoard(id: string, dto: boardDto) {
+        const existingBoard: any = await this.getSingleBoard(id);
+        console.log(id, dto);
         await this.prisma.$executeRaw`UPDATE public.boards
-                                    SET name=${dto.name},
-                                        organization_id=${dto.organizationId}
+                                    SET name=${
+                                        !dto.name || dto.name === ''
+                                            ? existingBoard[0].board_name
+                                            : dto.name
+                                    },
+                                        organization_id=${
+                                            !dto.organizationId || dto.organizationId === ''
+                                                ? existingBoard[0].board_organization_id
+                                                : dto.organizationId
+                                        }
                                     WHERE id=${id}`;
 
         return this.getSingleBoard(id);

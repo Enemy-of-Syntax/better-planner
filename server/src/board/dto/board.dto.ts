@@ -7,11 +7,9 @@ export class boardDto {
     }
 
     @ApiProperty({ type: 'string' })
-    @IsNotEmpty()
     name: string;
 
     @ApiProperty({ type: 'string' })
-    @IsNotEmpty()
     organizationId: string;
 }
 
