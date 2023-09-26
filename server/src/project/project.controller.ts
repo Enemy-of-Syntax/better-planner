@@ -1,26 +1,57 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Put } from '@nestjs/common';
+import {
+    Controller,
+    Get,
+    Post,
+    Body,
+    Patch,
+    Param,
+    Delete,
+    Query,
+    Put,
+    UseGuards,
+    Request,
+    UploadedFile,
+    UseInterceptors,
+} from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { ApiBody, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+    ApiBearerAuth,
+    ApiBody,
+    ApiConsumes,
+    ApiQuery,
+    ApiResponse,
+    ApiTags,
+} from '@nestjs/swagger';
 import { PROJECT_STATUS } from '@prisma/client';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { IauthRequest } from 'src/@types/authRequest';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { fileStorage } from 'libs/file-storage';
 
 @Controller('project')
 @ApiTags('project')
+@UseGuards(AuthGuard)
+@ApiBearerAuth()
 export class ProjectController {
     constructor(private readonly projectService: ProjectService) {}
 
     @ApiResponse({ status: 201, description: 'new project created' })
     @ApiResponse({ status: 400, description: 'bad request' })
     @ApiResponse({ status: 500, description: 'internal server error' })
+    @ApiConsumes('multipart/form-data')
     @ApiBody({ type: CreateProjectDto, description: 'project create' })
     @Post('create')
     @ApiQuery({ name: 'status', enum: PROJECT_STATUS })
+    @UseInterceptors(FileInterceptor('image', fileStorage))
     create(
         @Body() createProjectDto: CreateProjectDto,
         @Query('status') status: PROJECT_STATUS = PROJECT_STATUS.ONGOING,
+        @Request() req: IauthRequest,
+        @UploadedFile() image?: Express.Multer.File,
     ) {
-        return this.projectService.create(createProjectDto, status);
+        return this.projectService.create(createProjectDto, status, req.user.id, image);
     }
 
     @ApiResponse({ status: 200, description: 'fetched all projects success' })

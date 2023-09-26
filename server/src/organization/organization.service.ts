@@ -18,7 +18,6 @@ export class OrganizationService {
         try {
             const allOrganizations: organization[] | [] =
                 await this.orgQuery.findAllOrganizations();
-            console.log(allOrganizations);
             if (!allOrganizations) throw new Error();
 
             return Responser({
@@ -42,7 +41,6 @@ export class OrganizationService {
         try {
             const organizationDetail: organization[] | [] =
                 await this.orgQuery.findOrganizationById(id);
-            console.log(organizationDetail);
 
             if (organizationDetail.length > 0) {
                 return Responser({
@@ -75,7 +73,6 @@ export class OrganizationService {
             const id: string = await uuidV4();
 
             const updateUserRole: any = await this.authQuery.updateUserRole(userId);
-            console.log(updateUserRole);
             if (!updateUserRole) throw new Error('failed to update user role');
 
             let image: imageType = { id: '', name: '', path: '' };

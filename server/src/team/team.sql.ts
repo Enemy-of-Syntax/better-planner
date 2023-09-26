@@ -81,7 +81,6 @@ export class TeamQuery {
     // Update section
     async updateTeam(id: string, dto: UpdateTeam, imageId: string) {
         const existingTeam = await this.findSingleTeam(id);
-        console.log(existingTeam);
         await this.prisma.$executeRaw`UPDATE public.teams   
                                       SET  name=${
                                           dto.name === '' ? existingTeam[0].team_name : dto.name

@@ -134,7 +134,6 @@ export class MemberService {
             if (memberList.length === 0) throw new Error('member list empty');
 
             const removedMember: any = await this.memberQuery.deleteMember(id);
-            console.log(removedMember);
             return Responser({
                 statusCode: 204,
                 message: 'successfully removed member ',

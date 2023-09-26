@@ -6,17 +6,36 @@ import { v4 as uuidV4 } from 'uuid';
 import { PROJECT_STATUS } from '@prisma/client';
 import { Responser } from 'libs/Responser';
 import { error } from 'console';
+import { imageType } from 'src/@types/imageType';
+import { QueryService } from 'src/auth/auth.sql';
 @Injectable()
 export class ProjectService {
-    constructor(private readonly projectQuery: projectQuery) {}
-    async create(createProjectDto: CreateProjectDto, status: PROJECT_STATUS) {
+    constructor(
+        private readonly projectQuery: projectQuery,
+        private readonly authsql: QueryService,
+    ) {}
+    async create(
+        createProjectDto: CreateProjectDto,
+        status: PROJECT_STATUS,
+        userId: string,
+        Image?: Express.Multer.File,
+    ) {
         try {
             const projectId = await uuidV4();
+            let image: imageType = { id: '', name: '', path: '' };
+            if (Image) {
+                image = await this.authsql.insertPhoto({
+                    name: Image.filename,
+                    path: Image.path,
+                });
+            }
 
             const newProject = await this.projectQuery.createNewProject(
                 projectId,
                 createProjectDto,
                 status,
+                image.id === '' ? null : image.id,
+                userId,
             );
             if (!newProject) throw error;
 

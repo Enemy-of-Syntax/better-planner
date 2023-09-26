@@ -1,13 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNotEmpty } from 'class-validator';
-import { AnyRecord } from 'dns';
+import { Transform } from 'class-transformer';
 
 export class CreateProjectDto {
     constructor() {
         (this.name = ''), (this.organizationId = []);
     }
     @ApiProperty()
-    @IsNotEmpty()
     name: string;
 
     @ApiProperty({
@@ -16,7 +14,9 @@ export class CreateProjectDto {
             type: 'string',
         },
     })
-    @IsNotEmpty()
-    @IsArray()
-    organizationId: any[];
+    @Transform(({ value }) => value.split(','))
+    organizationId: string[];
+
+    @ApiProperty({ type: 'string', format: 'binary', required: false })
+    public image?: string[];
 }

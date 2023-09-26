@@ -44,7 +44,6 @@ export class AuthController {
     @UseInterceptors(FileInterceptor('image', fileStorage))
     @Post('register')
     RegisterUser(@Body() dto: registerUserDto, @UploadedFile() image: Express.Multer.File) {
-        console.log(image);
         return this.authService.registerUser(dto, image);
     }
     @ApiResponse({ status: 200, description: 'user login success' })
@@ -66,9 +65,6 @@ export class AuthController {
     @ApiOperation({ summary: 'profile me' })
     @Get('profile/me')
     getProfile(@Request() request: IauthRequest) {
-        console.log('reach');
-        console.log(request);
-        console.log('reach');
         return this.authService.profile(request.user.id);
     }
 

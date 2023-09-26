@@ -108,7 +108,6 @@ export class TeamService {
                 dto,
                 image.id === '' ? updateTeamExist[0].team_image_id : image.id,
             );
-            console.log(updateTeam);
             if (!updateTeam) throw error;
 
             return Responser({

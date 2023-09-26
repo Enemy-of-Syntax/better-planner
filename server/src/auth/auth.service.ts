@@ -44,7 +44,6 @@ export class AuthService {
                     imageId: image.id === '' ? null : image.id,
                 }),
             });
-            console.log('after created');
 
             return Responser({
                 statusCode: 201,
@@ -95,8 +94,6 @@ export class AuthService {
     }
 
     async profile(id: string) {
-        console.log('service');
-        console.log(id);
         try {
             const profileUser = await this.queryService.findUserById(id);
             if (!profileUser) throw new NotFoundException('user not found');
@@ -146,10 +143,8 @@ export class AuthService {
     async updateProfile(dto: updateUserDto, id: string, Image?: Express.Multer.File) {
         try {
             const { email, name, password } = dto;
-            console.log('name', name);
             const isUserExist: any = await this.queryService.findUserById(id);
             if (isUserExist.length === 0 || !isUserExist) throw new Error('user does not exist');
-            console.log(isUserExist);
             let image: imageType = { id: '', name: '', path: '' };
             if (image) {
                 image = await this.queryService.insertPhoto({
@@ -158,9 +153,6 @@ export class AuthService {
                 });
             }
 
-            console.log({
-                imageId: image.id,
-            });
             const updatedUser: any = await this.queryService.updateUser({
                 id,
                 email: email === '' ? isUserExist[0]?.email : email,

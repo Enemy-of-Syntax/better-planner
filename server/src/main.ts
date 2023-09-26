@@ -1,14 +1,30 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 // import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import { useContainer } from 'class-validator';
 
 const PORT: string | undefined = process.env.PORT;
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
+    // Use ClassSerializerInterceptor to transform responses
+    app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+
+    // Use ValidationPipe with the class-validator package
+    app.useGlobalPipes(
+        new ValidationPipe({
+            transform: true,
+            transformOptions: {
+                enableImplicitConversion: true,
+            },
+        }),
+    );
+
+    // Use the container for class-validator
+    useContainer(app.select(AppModule), { fallbackOnErrors: true });
+
     app.enableCors();
-    app.useGlobalPipes(new ValidationPipe());
 
     const config = new DocumentBuilder()
         .addBearerAuth()

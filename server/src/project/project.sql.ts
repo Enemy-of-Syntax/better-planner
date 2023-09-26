@@ -9,18 +9,57 @@ export class projectQuery {
     constructor(private readonly prisma: PrismaService) {}
 
     async findAllProjects() {
-        return await this.prisma.$queryRaw(Prisma.sql`SELECT * FROM public.projects`);
+        return await this.prisma.$queryRaw(Prisma.sql`
+        SELECT 
+        public.projects.id,
+        public.projects.name AS project_name,
+        public.projects."imageId" AS project_image_id,
+        public.files.name AS  project_image_name,
+        public.files.path AS  project_image_path,
+        public.projects.status AS project_status,
+        public.users.id AS created_user_id,
+        public.users.name AS created_user_name,
+        public.projects.created_at,
+        public.projects.updated_at
+        FROM public.projects
+        LEFT JOIN public.files ON public.projects."imageId"=public.files.id
+        LEFT JOIN public.users ON public.projects."createdUserId"=public.users.id
+        `);
     }
 
     async findSingleProject(id: string) {
-        return await this.prisma.$queryRaw(Prisma.sql`SELECT * FROM public.projects`);
+        return await this.prisma.$queryRaw(Prisma.sql`
+        SELECT 
+        public.projects.id,
+        public.projects.name AS project_name,
+        public.projects."imageId" AS project_image_id,
+        public.files.name AS  project_image_name,
+        public.files.path AS  project_image_path,
+        public.projects.status AS project_status,
+        public.users.id AS created_user_id,
+        public.users.name AS created_user_name,
+        public.projects.created_at,
+        public.projects.updated_at
+        FROM public.projects
+        LEFT JOIN public.files ON public.projects."imageId"=public.files.id
+        LEFT JOIN public.users ON public.projects."createdUserId"=public.users.id
+        WHERE public.projects.id=${id}
+        `);
     }
 
-    async createNewProject(projectId: string, dto: CreateProjectDto, status: PROJECT_STATUS) {
+    async createNewProject(
+        projectId: string,
+        dto: CreateProjectDto,
+        status: PROJECT_STATUS,
+        imageId: string | null | undefined,
+        createdUserId: string,
+    ) {
         await this.prisma.$executeRaw`INSERT INTO public.projects
-                            (id,name,status,created_at,updated_at)
-                            VALUES(${projectId},${dto.name},${status},${new Date()},${new Date()})`;
-
+                            (id,name,"imageId",status,"createdUserId",created_at,updated_at)
+                            VALUES(${projectId},${dto.name},${
+            imageId && imageId
+        },${status},${createdUserId},${new Date()},${new Date()})`;
+        console.log(dto);
         for (let i = 0; i < dto.organizationId.length; i++) {
             const pivotId = await uuidV4();
             await this.prisma.$executeRaw`INSERT INTO public.project_on_organizations

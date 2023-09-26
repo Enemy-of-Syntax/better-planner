@@ -39,7 +39,6 @@ export class MemberController {
         @Query('role') role: MEMBER_ROLE = MEMBER_ROLE.ADMIN,
         @Request() req: IauthRequest,
     ) {
-        console.log(req);
         return this.memberService.create(createMemberDto, status, role, req.user.id);
     }
 

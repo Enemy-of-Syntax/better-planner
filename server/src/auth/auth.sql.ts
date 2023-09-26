@@ -80,7 +80,6 @@ export class QueryService {
         },${newDate},${newDate})`;
 
         let userArr = await this.findUserByEmail(email);
-        console.log(userArr);
         return userArr[0];
     }
 
@@ -100,7 +99,6 @@ export class QueryService {
     }
 
     async updateUser({ id, email, imageId, name, password }) {
-        console.log(id, email, imageId, name, password);
         await this.prisma.$executeRaw`UPDATE public.users 
                                 SET email=${email},
                                     name=${name},

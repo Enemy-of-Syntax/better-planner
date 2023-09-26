@@ -99,7 +99,6 @@ export class organizationQuery {
     ) {
         try {
             const existOrganization: any = await this.findOrganizationById(id);
-            console.log(existOrganization);
             if (dto.name !== undefined || null || false) {
                 const newDate = new Date();
                 await this.prisma.$executeRaw`UPDATE public.organizations 
