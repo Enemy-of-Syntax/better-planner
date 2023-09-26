@@ -7,22 +7,50 @@ import { boardDto } from './dto/board.dto';
 export class BoardSql {
     constructor(private readonly prisma: PrismaService) {}
     async getAllBoards() {
-        return await this.prisma.$queryRaw(Prisma.sql`SELECT * FROM public.boards`);
+        return await this.prisma.$queryRaw(Prisma.sql`
+            SELECT 
+            public.boards.id,
+            public.boards.name AS board_name,
+            public.boards.organization_id AS board_organization_id,
+            public.organizations.name AS board_organization_name,
+            public.organizations."createdUserId" AS created_user_id,
+            public.users.name AS created_user_name,
+            public.organizations.created_at,
+            public.organizations.updated_at
+            
+            FROM public.boards
+
+            LEFT JOIN public.organizations ON public.boards.organization_id=public.organizations.id
+            LEFT JOIN public.users ON public.boards."createdUserId"=public.users.id
+            `);
     }
 
     async getSingleBoard(id: string) {
         return await this.prisma.$queryRaw(
-            Prisma.sql`SELECT * FROM public.boards
-                        WHERE public.boards.id=${id}`,
+            Prisma.sql`SELECT 
+            public.boards.id,
+            public.boards.name AS board_name,
+            public.boards.organization_id AS board_organization_id,
+            public.organizations.name AS board_organization_name,
+            public.organizations."createdUserId" AS created_user_id,
+            public.users.name AS created_user_name,
+            public.organizations.created_at,
+            public.organizations.updated_at
+            
+            FROM public.boards
+
+            LEFT JOIN public.organizations ON public.boards.organization_id=public.organizations.id
+            LEFT JOIN public.users ON public.boards."createdUserId"=public.users.id
+            WHERE public.boards.id=${id}`,
         );
     }
 
-    async createBoard(id: string, dto: boardDto) {
+    async createBoard(id: string, dto: boardDto, userId: string) {
         await this.prisma.$executeRaw`INSERT INTO public.boards 
-                               (id,name,organization_id,created_at,updated_at)
+                               (id,name,organization_id,"createdUserId",created_at,updated_at)
                                VALUES(${id},${dto.name},${
             dto.organizationId
-        },${new Date()},${new Date()})`;
+        },${userId},${new Date()},${new Date()})`;
 
         return this.getSingleBoard(id);
     }

@@ -1,10 +1,24 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
-import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Post,
+    Put,
+    Request,
+    UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { BoardService } from './board.service';
 import { boardDto } from './dto/board.dto';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { IauthRequest } from 'src/@types/authRequest';
 
 @Controller('board')
 @ApiTags('board')
+@UseGuards(AuthGuard)
+@ApiBearerAuth()
 export class BoardController {
     constructor(private readonly boardService: BoardService) {}
     @ApiResponse({ status: 200, description: 'successfully fetched boards list' })
@@ -39,8 +53,8 @@ export class BoardController {
     @ApiResponse({ status: 404, description: 'not found' })
     @ApiResponse({ status: 500, description: 'internal server error' })
     @Post('create')
-    CreateOrganization(@Body() dto: boardDto) {
-        return this.boardService.createBoard(dto);
+    CreateOrganization(@Body() dto: boardDto, @Request() req: IauthRequest) {
+        return this.boardService.createBoard(dto, req.user.id);
     }
 
     @ApiResponse({ status: 201, description: 'successfully updated organizations' })

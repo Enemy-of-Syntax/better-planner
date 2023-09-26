@@ -50,10 +50,10 @@ export class BoardService {
         }
     }
 
-    async createBoard(dto: boardDto) {
+    async createBoard(dto: boardDto, userId: string) {
         try {
             const id: string = await uuidV4();
-            const newBoard = await this.boardQuery.createBoard(id, dto);
+            const newBoard = await this.boardQuery.createBoard(id, dto, userId);
             if (!newBoard) throw new Error();
             return Responser({
                 statusCode: 200,
