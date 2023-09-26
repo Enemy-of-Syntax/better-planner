@@ -1,15 +1,23 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateProjectDto } from './create-project.dto';
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 export class UpdateProjectDto {
     constructor() {
-        (this.name = ''), (this.organizationId = '');
+        (this.name = ''), (this.organizationId = []);
     }
-
     @ApiProperty({ required: false })
-    name: string;
+    name?: string;
 
-    @ApiProperty({ required: false })
-    organizationId: string;
+    @ApiProperty({
+        type: 'array',
+        items: {
+            type: 'string',
+        },
+        required: false,
+    })
+    @Transform(({ value }) => value.split(','))
+    organizationId?: string[];
+
+    @ApiProperty({ type: 'string', format: 'binary', required: false })
+    public image?: string[];
 }

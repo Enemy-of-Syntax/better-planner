@@ -80,7 +80,7 @@ export class OrganizationController {
     @ApiConsumes('multipart/form-data')
     @UseInterceptors(FileInterceptor('image', fileStorage))
     @Put('update/:id')
-    UpdatedOrganization(
+    UpdateOrg(
         @Param('id') id: string,
         @Body() dto: UpdateOrganizationDto,
         @Query('status') status: ORGANIZATION_STATUS = ORGANIZATION_STATUS.ACTIVE,

@@ -74,14 +74,18 @@ export class ProjectController {
     @ApiResponse({ status: 201, description: 'new project created' })
     @ApiResponse({ status: 400, description: 'bad request' })
     @ApiResponse({ status: 500, description: 'internal server error' })
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({ type: UpdateProjectDto, description: 'update project' })
     @ApiQuery({ name: 'status', enum: PROJECT_STATUS })
+    @UseInterceptors(FileInterceptor('image', fileStorage))
     @Put('update/:id')
     update(
         @Param('id') id: string,
         @Body() updateProjectDto: UpdateProjectDto,
         @Query('status') status: PROJECT_STATUS = PROJECT_STATUS.ONGOING,
+        @UploadedFile() image?: Express.Multer.File,
     ) {
-        return this.projectService.update(id, updateProjectDto, status);
+        return this.projectService.update(id, updateProjectDto, status, image);
     }
 
     @ApiResponse({ status: 204, description: 'project deleted success' })

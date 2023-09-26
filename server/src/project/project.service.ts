@@ -100,15 +100,29 @@ export class ProjectService {
         }
     }
 
-    async update(id: string, updateProjectDto: UpdateProjectDto, status: PROJECT_STATUS) {
+    async update(
+        id: string,
+        updateProjectDto: UpdateProjectDto,
+        status: PROJECT_STATUS,
+        Image?: Express.Multer.File,
+    ) {
         try {
             const projectExist: any = await this.projectQuery.findSingleProject(id);
             if (projectExist.length === 0) throw new Error('project does not exist');
+
+            let image: imageType = { id: '', name: '', path: '' };
+            if (Image) {
+                image = await this.authsql.insertPhoto({
+                    name: Image.filename,
+                    path: Image.path,
+                });
+            }
 
             const updatedProject = await this.projectQuery.updateProject(
                 id,
                 updateProjectDto,
                 status,
+                image.id === '' ? null : image.id,
             );
             if (!updatedProject) throw error;
 
