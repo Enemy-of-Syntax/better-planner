@@ -15,7 +15,7 @@ export class QueryService {
             public.users.email,
             public.users.name AS user_name,
             public.users.role,
-            public.users."imageId",
+            public.users.image_id,
             public.files.name AS image_name,
             public.files.path,
             public.users.password,
@@ -23,7 +23,7 @@ export class QueryService {
             public.users.updated_at
             FROM public.users
             LEFT JOIN public.files
-            ON public.users."imageId"=public.files.id
+            ON public.users.image_id=public.files.id
             WHERE public.users.email=${email}
             `,
         );
@@ -37,7 +37,7 @@ export class QueryService {
             public.users.email,
             public.users.name AS user_name,
             public.users.role,
-            public.users."imageId",
+            public.users.image_id,
             public.files.name AS image_name,
             public.files.path,
             public.users.password,
@@ -45,7 +45,7 @@ export class QueryService {
             public.users.updated_at
             FROM public.users
             LEFT JOIN public.files
-            ON public.users."imageId"=public.files.id
+            ON public.users.image_id=public.files.id
             `,
         );
     }
@@ -58,7 +58,7 @@ export class QueryService {
             public.users.email,
             public.users.name AS user_name,
             public.users.role,
-            public.users."imageId",
+            public.users.image_id,
             public.files.name AS image_name,
             public.files.path,
             public.users.password,
@@ -66,7 +66,7 @@ export class QueryService {
             public.users.updated_at
             FROM public.users
             LEFT JOIN public.files
-            ON public.users."imageId"=public.files.id
+            ON public.users.image_id=public.files.id
             WHERE public.users.id=${id}
             `,
         );
@@ -75,7 +75,7 @@ export class QueryService {
     async insertNewUser({ id, email, imageId, name, password }) {
         const newDate = new Date();
         await this.prisma
-            .$executeRaw`INSERT INTO public.users ( id,email,name,password,"imageId",created_at,updated_at) VALUES (${id},${email},${name},${password},${
+            .$executeRaw`INSERT INTO public.users ( id,email,name,password,image_id,created_at,updated_at) VALUES (${id},${email},${name},${password},${
             imageId && imageId
         },${newDate},${newDate})`;
 
@@ -104,7 +104,7 @@ export class QueryService {
                                     name=${name},
                                     password=${password},
                                     updated_at=${new Date()},
-                                    "imageId"=${imageId && imageId}
+                                    image_id=${imageId && imageId}
                                 WHERE id=${id}
                                     `;
         let updArr: user[] | undefined = await this.findUserById(id);

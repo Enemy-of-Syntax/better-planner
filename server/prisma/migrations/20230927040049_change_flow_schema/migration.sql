@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "USER_ROLE" AS ENUM ('ADMIN', 'MEMBER', 'SUPER_ADMIN');
+
+-- CreateEnum
 CREATE TYPE "ORGANIZATION_STATUS" AS ENUM ('ACTIVE', 'BAN');
 
 -- CreateEnum
@@ -15,7 +18,8 @@ CREATE TABLE "users" (
     "id" STRING NOT NULL,
     "email" STRING NOT NULL,
     "name" STRING NOT NULL,
-    "imageId" STRING,
+    "image_id" STRING,
+    "role" "USER_ROLE",
     "password" STRING NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -24,11 +28,26 @@ CREATE TABLE "users" (
 );
 
 -- CreateTable
+CREATE TABLE "organizations" (
+    "id" STRING NOT NULL,
+    "name" STRING NOT NULL,
+    "image_id" STRING,
+    "status" "ORGANIZATION_STATUS" NOT NULL DEFAULT 'ACTIVE',
+    "created_user_id" STRING NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "organizations_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "projects" (
     "id" STRING NOT NULL,
     "name" STRING NOT NULL,
-    "imageId" STRING,
+    "image_id" STRING,
     "status" "PROJECT_STATUS" NOT NULL DEFAULT 'ONGOING',
+    "organization_id" STRING,
+    "created_user_id" STRING NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -36,26 +55,14 @@ CREATE TABLE "projects" (
 );
 
 -- CreateTable
-CREATE TABLE "project_on_organizations" (
+CREATE TABLE "ProjectOnTeam" (
     "id" STRING NOT NULL,
-    "organization_id" STRING NOT NULL,
-    "project_id" STRING NOT NULL,
+    "project_id" STRING,
+    "team_id" STRING,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "project_on_organizations_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "organizations" (
-    "id" STRING NOT NULL,
-    "name" STRING NOT NULL,
-    "image_id" STRING,
-    "status" "ORGANIZATION_STATUS" NOT NULL DEFAULT 'ACTIVE',
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "organizations_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "ProjectOnTeam_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -78,6 +85,7 @@ CREATE TABLE "members" (
     "user_id" STRING NOT NULL,
     "role" "MEMBER_ROLE" NOT NULL DEFAULT 'MEMBER',
     "status" "MEMBER_STATUS" NOT NULL DEFAULT 'ACTIVE',
+    "createdUserId" STRING NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -100,6 +108,7 @@ CREATE TABLE "boards" (
     "id" STRING NOT NULL,
     "name" STRING NOT NULL,
     "organization_id" STRING NOT NULL,
+    "created_user_id" STRING NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -114,6 +123,7 @@ CREATE TABLE "tasks" (
     "board_id" STRING NOT NULL,
     "start_date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "due_date" TIMESTAMP(3) NOT NULL,
+    "created_user_id" STRING NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -156,13 +166,13 @@ CREATE UNIQUE INDEX "users_id_key" ON "users"("id");
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "users_imageId_key" ON "users"("imageId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "projects_name_key" ON "projects"("name");
+CREATE UNIQUE INDEX "users_image_id_key" ON "users"("image_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "organizations_name_key" ON "organizations"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "projects_name_key" ON "projects"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "files_id_key" ON "files"("id");
@@ -174,19 +184,28 @@ CREATE UNIQUE INDEX "_fileTotask_AB_unique" ON "_fileTotask"("A", "B");
 CREATE INDEX "_fileTotask_B_index" ON "_fileTotask"("B");
 
 -- AddForeignKey
-ALTER TABLE "users" ADD CONSTRAINT "users_imageId_fkey" FOREIGN KEY ("imageId") REFERENCES "files"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "projects" ADD CONSTRAINT "projects_imageId_fkey" FOREIGN KEY ("imageId") REFERENCES "files"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "project_on_organizations" ADD CONSTRAINT "project_on_organizations_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE NO ACTION ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "project_on_organizations" ADD CONSTRAINT "project_on_organizations_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "users" ADD CONSTRAINT "users_image_id_fkey" FOREIGN KEY ("image_id") REFERENCES "files"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "organizations" ADD CONSTRAINT "organizations_image_id_fkey" FOREIGN KEY ("image_id") REFERENCES "files"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "organizations" ADD CONSTRAINT "organizations_created_user_id_fkey" FOREIGN KEY ("created_user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "projects" ADD CONSTRAINT "projects_image_id_fkey" FOREIGN KEY ("image_id") REFERENCES "files"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "projects" ADD CONSTRAINT "projects_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "projects" ADD CONSTRAINT "projects_created_user_id_fkey" FOREIGN KEY ("created_user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProjectOnTeam" ADD CONSTRAINT "ProjectOnTeam_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProjectOnTeam" ADD CONSTRAINT "ProjectOnTeam_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "teams"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "teams" ADD CONSTRAINT "teams_image_id_fkey" FOREIGN KEY ("image_id") REFERENCES "files"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -204,6 +223,9 @@ ALTER TABLE "members" ADD CONSTRAINT "members_team_id_fkey" FOREIGN KEY ("team_i
 ALTER TABLE "members" ADD CONSTRAINT "members_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "members" ADD CONSTRAINT "members_createdUserId_fkey" FOREIGN KEY ("createdUserId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "taskAssignOnMember" ADD CONSTRAINT "taskAssignOnMember_member_id_fkey" FOREIGN KEY ("member_id") REFERENCES "members"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -213,7 +235,13 @@ ALTER TABLE "taskAssignOnMember" ADD CONSTRAINT "taskAssignOnMember_task_id_fkey
 ALTER TABLE "boards" ADD CONSTRAINT "boards_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE NO ACTION ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "boards" ADD CONSTRAINT "boards_created_user_id_fkey" FOREIGN KEY ("created_user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "tasks" ADD CONSTRAINT "tasks_board_id_fkey" FOREIGN KEY ("board_id") REFERENCES "boards"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tasks" ADD CONSTRAINT "tasks_created_user_id_fkey" FOREIGN KEY ("created_user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "labels" ADD CONSTRAINT "labels_task_id_fkey" FOREIGN KEY ("task_id") REFERENCES "tasks"("id") ON DELETE NO ACTION ON UPDATE CASCADE;

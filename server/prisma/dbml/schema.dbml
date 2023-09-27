@@ -21,29 +21,6 @@ Table users {
   task tasks [not null]
 }
 
-Table projects {
-  id String [pk]
-  name String [unique, not null]
-  imageId String
-  image files
-  status PROJECT_STATUS [not null, default: 'ONGOING']
-  createdUserId String [not null]
-  createdBy users [not null]
-  createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime [not null]
-  ProjectOnOrganization project_on_organizations [not null]
-}
-
-Table project_on_organizations {
-  id String [pk]
-  organizationId String [not null]
-  organization organizations [not null]
-  projectId String [not null]
-  project projects [not null]
-  createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime [not null]
-}
-
 Table organizations {
   id String [pk]
   name String [unique, not null]
@@ -54,9 +31,34 @@ Table organizations {
   createdBy users [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
+  project projects [not null]
   team teams [not null]
-  ProjectOnOrganization project_on_organizations [not null]
   board boards [not null]
+}
+
+Table projects {
+  id String [pk]
+  name String [unique, not null]
+  imageId String
+  image files
+  status PROJECT_STATUS [not null, default: 'ONGOING']
+  organizationId String
+  organization organizations
+  createdUserId String [not null]
+  createdBy users [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  projectOnTeam ProjectOnTeam [not null]
+}
+
+Table ProjectOnTeam {
+  id String [pk]
+  projectId String
+  project projects
+  teamId String
+  team teams
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
 }
 
 Table teams {
@@ -70,6 +72,7 @@ Table teams {
   createdBy users [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
+  projectOnTeam ProjectOnTeam [not null]
   member members [not null]
 }
 
@@ -182,17 +185,19 @@ Enum MEMBER_STATUS {
 
 Ref: users.imageId - files.id [delete: Set Null]
 
-Ref: projects.imageId > files.id [delete: Cascade]
-
-Ref: projects.createdUserId > users.id [delete: Cascade]
-
-Ref: project_on_organizations.organizationId > organizations.id [delete: No Action]
-
-Ref: project_on_organizations.projectId > projects.id [delete: Cascade]
-
 Ref: organizations.imageId > files.id [delete: Cascade]
 
 Ref: organizations.createdUserId > users.id [delete: Cascade]
+
+Ref: projects.imageId > files.id [delete: Cascade]
+
+Ref: projects.organizationId > organizations.id [delete: Set Null]
+
+Ref: projects.createdUserId > users.id [delete: Cascade]
+
+Ref: ProjectOnTeam.projectId > projects.id [delete: Set Null]
+
+Ref: ProjectOnTeam.teamId > teams.id [delete: Set Null]
 
 Ref: teams.imageId > files.id [delete: Cascade]
 

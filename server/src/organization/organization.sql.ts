@@ -17,6 +17,7 @@ export class organizationQuery {
             public.files.name AS Org_image_name,
             public.files.path AS Org_img_path,
             public.organizations.status AS Org_status,
+            array_agg(public.projects.id) AS Project_ids,
             public.teams.name AS team_name,
             public.boards.name AS board_name,
             public.users.id AS created_user_id,
@@ -26,15 +27,31 @@ export class organizationQuery {
 
             FROM public.organizations
 
-            LEFT JOIN public.users
-            ON public.organizations."createdUserId"=public.users.id
             LEFT JOIN public.files
             ON public.organizations.image_id=public.files.id
+            LEFT JOIN public.users
+            ON public.organizations.created_user_id=public.users.id
+            LEFT JOIN public.projects
+            ON public.organizations.id=public.projects.organization_id
             LEFT JOIN public.teams
             ON public.organizations.id=public.teams.organization_id
             LEFT JOIN public.boards
             ON public.organizations.id=public.boards.id
             WHERE public.organizations.id=${id}
+
+            GROUP BY 
+            public.organizations.id,
+            public.organizations.name,
+            public.organizations.image_id,
+            public.files.name,
+            public.files.path,
+            public.organizations.status,
+            public.teams.name,
+            public.boards.name,
+            public.users.id,
+            public.users.name,
+            public.organizations.created_at,
+            public.organizations.updated_at
                   `,
         );
     }
@@ -43,30 +60,47 @@ export class organizationQuery {
         try {
             return await this.prisma.$queryRaw(
                 Prisma.sql`
-                    SELECT 
-                    public.organizations.id,
-                    public.organizations.name AS Org_name,
-                    public.organizations.image_id AS Org_image_id,
-                    public.files.name AS Org_image_name,
-                    public.files.path AS Org_img_path,
-                    public.organizations.status AS Org_status,
-                    public.teams.name AS team_name,
-                    public.boards.name AS board_name,
-                    public.users.id AS created_user_id,
-                    public.users.name AS created_user_name,
-                    public.organizations.created_at,
-                    public.organizations.updated_at
-
-                    FROM public.organizations
-
-                    LEFT JOIN public.users
-                    ON public.organizations."createdUserId"=public.users.id
-                    LEFT JOIN public.files
-                    ON public.organizations.image_id=public.files.id
-                    LEFT JOIN public.teams
-                    ON public.organizations.id=public.teams.organization_id
-                    LEFT JOIN public.boards
-                    ON public.organizations.id=public.boards.id
+                SELECT 
+                public.organizations.id,
+                public.organizations.name AS Org_name,
+                public.organizations.image_id AS Org_image_id,
+                public.files.name AS Org_image_name,
+                public.files.path AS Org_img_path,
+                public.organizations.status AS Org_status,
+                array_agg(public.projects.id) AS Project_ids,
+                public.teams.name AS team_name,
+                public.boards.name AS board_name,
+                public.users.id AS created_user_id,
+                public.users.name AS created_user_name,
+                public.organizations.created_at,
+                public.organizations.updated_at
+    
+                FROM public.organizations
+    
+                LEFT JOIN public.files
+                ON public.organizations.image_id=public.files.id
+                LEFT JOIN public.users
+                ON public.organizations.created_user_id=public.users.id
+                LEFT JOIN public.projects
+                ON public.organizations.id=public.projects.organization_id
+                LEFT JOIN public.teams
+                ON public.organizations.id=public.teams.organization_id
+                LEFT JOIN public.boards
+                ON public.organizations.id=public.boards.id
+    
+                GROUP BY 
+                public.organizations.id,
+                public.organizations.name,
+                public.organizations.image_id,
+                public.files.name,
+                public.files.path,
+                public.organizations.status,
+                public.teams.name,
+                public.boards.name,
+                public.users.id,
+                public.users.name,
+                public.organizations.created_at,
+                public.organizations.updated_at
           `,
             );
         } catch (err) {
@@ -83,7 +117,7 @@ export class organizationQuery {
     ): Promise<any> {
         const newDate = new Date();
         await this.prisma.$executeRaw`INSERT INTO public.organizations
-                    (id,name,status,image_id,"createdUserId",created_at,updated_at) 
+                    (id,name,status,image_id,created_user_id,created_at,updated_at) 
                      VALUES(${id},${dto.name},${status},${
             imageId && imageId
         },${userId},${newDate},${newDate}) `;
