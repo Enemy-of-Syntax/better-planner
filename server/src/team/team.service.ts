@@ -45,8 +45,8 @@ export class TeamService {
             const newTeam = await this.teamQuery.insertNewTeam({
                 id: uuid,
                 name: dto.name,
-                organizationId: dto.organizationId,
                 createdUserId: userId,
+                organizationId: dto.organizationId,
                 imageId: image.id === '' ? null : image.id,
             });
 

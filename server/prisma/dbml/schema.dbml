@@ -33,7 +33,6 @@ Table organizations {
   updatedAt DateTime [not null]
   project projects [not null]
   team teams [not null]
-  board boards [not null]
 }
 
 Table projects {
@@ -48,10 +47,11 @@ Table projects {
   createdBy users [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
-  projectOnTeam ProjectOnTeam [not null]
+  projectOnTeam project_on_teams [not null]
+  board boards [not null]
 }
 
-Table ProjectOnTeam {
+Table project_on_teams {
   id String [pk]
   projectId String
   project projects
@@ -66,14 +66,15 @@ Table teams {
   name String [not null]
   imageId String
   image files
-  organizationId String [not null]
-  organization organizations [not null]
+  organizationId String
+  organization organizations
   createdUserId String [not null]
   createdBy users [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
-  projectOnTeam ProjectOnTeam [not null]
+  projectOnTeam project_on_teams [not null]
   member members [not null]
+  board boards [not null]
 }
 
 Table members {
@@ -104,8 +105,10 @@ Table taskAssignOnMember {
 Table boards {
   id String [pk]
   name String [not null]
-  organizationId String [not null]
-  organization organizations [not null]
+  teamId String [unique]
+  team teams
+  projectId String
+  project projects
   createdUserId String [not null]
   createdBy users [not null]
   createdAt DateTime [default: `now()`, not null]
@@ -195,13 +198,13 @@ Ref: projects.organizationId > organizations.id [delete: Set Null]
 
 Ref: projects.createdUserId > users.id [delete: Cascade]
 
-Ref: ProjectOnTeam.projectId > projects.id [delete: Set Null]
+Ref: project_on_teams.projectId > projects.id [delete: Set Null]
 
-Ref: ProjectOnTeam.teamId > teams.id [delete: Set Null]
+Ref: project_on_teams.teamId > teams.id [delete: Set Null]
 
 Ref: teams.imageId > files.id [delete: Cascade]
 
-Ref: teams.organizationId > organizations.id [delete: Cascade]
+Ref: teams.organizationId > organizations.id [delete: Set Null]
 
 Ref: teams.createdUserId > users.id [delete: Cascade]
 
@@ -215,7 +218,9 @@ Ref: taskAssignOnMember.memberId > members.id [delete: Cascade]
 
 Ref: taskAssignOnMember.taskId > tasks.id [delete: Cascade]
 
-Ref: boards.organizationId > organizations.id [delete: No Action]
+Ref: boards.teamId > teams.id [delete: Cascade]
+
+Ref: boards.projectId > projects.id [delete: Set Null]
 
 Ref: boards.createdUserId > users.id [delete: Cascade]
 

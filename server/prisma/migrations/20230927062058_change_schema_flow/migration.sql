@@ -55,14 +55,14 @@ CREATE TABLE "projects" (
 );
 
 -- CreateTable
-CREATE TABLE "ProjectOnTeam" (
+CREATE TABLE "project_on_teams" (
     "id" STRING NOT NULL,
     "project_id" STRING,
     "team_id" STRING,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "ProjectOnTeam_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "project_on_teams_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -70,7 +70,7 @@ CREATE TABLE "teams" (
     "id" STRING NOT NULL,
     "name" STRING NOT NULL,
     "image_id" STRING,
-    "organization_id" STRING NOT NULL,
+    "organization_id" STRING,
     "created_user_id" STRING NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -107,7 +107,8 @@ CREATE TABLE "taskAssignOnMember" (
 CREATE TABLE "boards" (
     "id" STRING NOT NULL,
     "name" STRING NOT NULL,
-    "organization_id" STRING NOT NULL,
+    "team_id" STRING,
+    "project_id" STRING,
     "created_user_id" STRING NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -175,6 +176,9 @@ CREATE UNIQUE INDEX "organizations_name_key" ON "organizations"("name");
 CREATE UNIQUE INDEX "projects_name_key" ON "projects"("name");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "boards_team_id_key" ON "boards"("team_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "files_id_key" ON "files"("id");
 
 -- CreateIndex
@@ -202,16 +206,16 @@ ALTER TABLE "projects" ADD CONSTRAINT "projects_organization_id_fkey" FOREIGN KE
 ALTER TABLE "projects" ADD CONSTRAINT "projects_created_user_id_fkey" FOREIGN KEY ("created_user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ProjectOnTeam" ADD CONSTRAINT "ProjectOnTeam_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "project_on_teams" ADD CONSTRAINT "project_on_teams_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ProjectOnTeam" ADD CONSTRAINT "ProjectOnTeam_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "teams"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "project_on_teams" ADD CONSTRAINT "project_on_teams_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "teams"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "teams" ADD CONSTRAINT "teams_image_id_fkey" FOREIGN KEY ("image_id") REFERENCES "files"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "teams" ADD CONSTRAINT "teams_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "teams" ADD CONSTRAINT "teams_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "teams" ADD CONSTRAINT "teams_created_user_id_fkey" FOREIGN KEY ("created_user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -232,7 +236,10 @@ ALTER TABLE "taskAssignOnMember" ADD CONSTRAINT "taskAssignOnMember_member_id_fk
 ALTER TABLE "taskAssignOnMember" ADD CONSTRAINT "taskAssignOnMember_task_id_fkey" FOREIGN KEY ("task_id") REFERENCES "tasks"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "boards" ADD CONSTRAINT "boards_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE NO ACTION ON UPDATE CASCADE;
+ALTER TABLE "boards" ADD CONSTRAINT "boards_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "teams"("id") ON DELETE CASCADE ON UPDATE SET NULL;
+
+-- AddForeignKey
+ALTER TABLE "boards" ADD CONSTRAINT "boards_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "boards" ADD CONSTRAINT "boards_created_user_id_fkey" FOREIGN KEY ("created_user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

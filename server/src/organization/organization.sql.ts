@@ -18,8 +18,7 @@ export class organizationQuery {
             public.files.path AS Org_img_path,
             public.organizations.status AS Org_status,
             array_agg(public.projects.id) AS Project_ids,
-            public.teams.name AS team_name,
-            public.boards.name AS board_name,
+            array_agg(public.teams.id) AS Team_ids,
             public.users.id AS created_user_id,
             public.users.name AS created_user_name,
             public.organizations.created_at,
@@ -35,8 +34,7 @@ export class organizationQuery {
             ON public.organizations.id=public.projects.organization_id
             LEFT JOIN public.teams
             ON public.organizations.id=public.teams.organization_id
-            LEFT JOIN public.boards
-            ON public.organizations.id=public.boards.id
+           
             WHERE public.organizations.id=${id}
 
             GROUP BY 
@@ -46,8 +44,6 @@ export class organizationQuery {
             public.files.name,
             public.files.path,
             public.organizations.status,
-            public.teams.name,
-            public.boards.name,
             public.users.id,
             public.users.name,
             public.organizations.created_at,
@@ -68,8 +64,7 @@ export class organizationQuery {
                 public.files.path AS Org_img_path,
                 public.organizations.status AS Org_status,
                 array_agg(public.projects.id) AS Project_ids,
-                public.teams.name AS team_name,
-                public.boards.name AS board_name,
+                array_agg(public.teams.id) AS Team_ids,
                 public.users.id AS created_user_id,
                 public.users.name AS created_user_name,
                 public.organizations.created_at,
@@ -85,8 +80,6 @@ export class organizationQuery {
                 ON public.organizations.id=public.projects.organization_id
                 LEFT JOIN public.teams
                 ON public.organizations.id=public.teams.organization_id
-                LEFT JOIN public.boards
-                ON public.organizations.id=public.boards.id
     
                 GROUP BY 
                 public.organizations.id,
@@ -95,8 +88,6 @@ export class organizationQuery {
                 public.files.name,
                 public.files.path,
                 public.organizations.status,
-                public.teams.name,
-                public.boards.name,
                 public.users.id,
                 public.users.name,
                 public.organizations.created_at,

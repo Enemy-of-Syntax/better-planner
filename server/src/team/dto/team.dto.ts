@@ -1,15 +1,24 @@
-import { Query } from '@nestjs/common';
-import { ApiProperty, ApiQuery, PartialType } from '@nestjs/swagger';
-import { IsNotEmpty } from 'class-validator';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 export class TeamDto {
     constructor() {
         this.name = '';
+        this.memberId = [];
         this.organizationId = '';
     }
 
     @ApiProperty()
     name: string;
+
+    @ApiProperty({
+        type: 'array',
+        items: {
+            type: 'string',
+        },
+    })
+    @Transform(({ value }) => value.split(','))
+    memberId: string[];
 
     @ApiProperty()
     organizationId: string;
