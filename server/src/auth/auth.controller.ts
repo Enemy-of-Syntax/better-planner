@@ -19,7 +19,7 @@ import {
     ApiResponse,
     ApiTags,
 } from '@nestjs/swagger';
-import { loginUserDto, registerUserDto, updateUserDto } from './dto';
+import { forgotPwDto, loginUserDto, registerUserDto, updateUserDto } from './dto';
 import { AuthService } from './auth.service';
 import { IauthRequest } from 'src/@types/authRequest';
 import { AuthGuard } from './auth.guard';
@@ -47,6 +47,7 @@ export class AuthController {
     RegisterUser(@Body() dto: registerUserDto, @UploadedFile() image: Express.Multer.File) {
         return this.authService.registerUser(dto, image);
     }
+
     @ApiResponse({ status: 200, description: 'user login success' })
     @ApiResponse({ status: 401, description: 'wrong credentials' })
     @ApiResponse({ status: 400, description: 'bad request' })
@@ -58,6 +59,12 @@ export class AuthController {
     @Post('login')
     LoginUser(@Body() dto: loginUserDto) {
         return this.authService.loginUser(dto);
+    }
+
+    @ApiOperation({ summary: 'forgot password' })
+    @Post('forgot-password')
+    forgotPassword(@Body() dto: forgotPwDto) {
+        return this.authService.passwordForgot(dto);
     }
 
     @ApiResponse({ status: 200, description: 'token valid' })

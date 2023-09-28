@@ -5,7 +5,7 @@ import {
     NotFoundException,
     UnauthorizedException,
 } from '@nestjs/common';
-import { loginUserDto, registerUserDto, updateUserDto } from './dto';
+import { forgotPwDto, loginUserDto, registerUserDto, updateUserDto } from './dto';
 import { JwtService } from '@nestjs/jwt';
 import { Responser } from 'libs/Responser';
 import { QueryService } from './auth.sql';
@@ -15,6 +15,9 @@ import { imageType } from 'src/@types/imageType';
 import * as argon from 'argon2';
 import { MemberService } from 'src/member/member.service';
 import { CreateMemberDto } from 'src/member/dto/create-member.dto';
+import { error } from 'console';
+import EmailService from 'libs/mailservice';
+import { recoverPw } from 'template/recoverPw';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +25,7 @@ export class AuthService {
         private readonly jwt: JwtService,
         private queryService: QueryService,
         private readonly memberService: MemberService,
+        private readonly Email: EmailService,
     ) {}
 
     async registerUser(dto: registerUserDto, Image?: Express.Multer.File) {
@@ -61,6 +65,32 @@ export class AuthService {
             throw new HttpException(
                 {
                     message: 'Failed to register new user',
+                    devMessage: err.message || '',
+                },
+                400,
+            );
+        }
+    }
+
+    async passwordForgot(dto: forgotPwDto) {
+        try {
+            const randomCode = Math.round(Math.random() * 1000000);
+
+            const isFoundUser = await this.queryService.findUserByEmail(dto.email);
+            if (!isFoundUser) throw new error('user not found');
+
+            await this.Email.sendMail({
+                from: 'naingaung9863@gmail.com',
+                to: isFoundUser[0]?.email,
+                subject: 'Recover Password',
+                html: recoverPw(randomCode),
+            });
+
+            return 'recovery code sent successfully';
+        } catch (err: any) {
+            throw new HttpException(
+                {
+                    message: 'Something went wrong!',
                     devMessage: err.message || '',
                 },
                 400,

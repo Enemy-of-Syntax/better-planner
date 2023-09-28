@@ -1,5 +1,5 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty } from 'class-validator';
+import { IsEmail } from 'class-validator';
 
 export class registerUserDto {
     constructor() {
@@ -31,4 +31,12 @@ export class loginUserDto {
 
     @ApiProperty({ example: 'naing123' })
     password: string;
+}
+
+export class forgotPwDto {
+    constructor() {
+        this.email = '';
+    }
+    @ApiProperty()
+    email: string;
 }

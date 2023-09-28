@@ -8,6 +8,7 @@ import { MemberService } from 'src/member/member.service';
 import { memberQuery } from 'src/member/member.sql';
 import { TeamQuery } from 'src/team/team.sql';
 import { organizationQuery } from 'src/organization/organization.sql';
+import EmailService from 'libs/mailservice';
 
 @Module({
     controllers: [AuthController],
@@ -20,6 +21,7 @@ import { organizationQuery } from 'src/organization/organization.sql';
         MemberService,
         TeamQuery,
         organizationQuery,
+        EmailService,
     ],
 })
 export class AuthModule {}

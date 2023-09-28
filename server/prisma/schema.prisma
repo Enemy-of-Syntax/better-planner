@@ -214,6 +214,7 @@ enum PROJECT_STATUS {
 }
 
 enum MEMBER_ROLE {
+  SUPER_ADMIN
   ADMIN
   MEMBER
 }
