@@ -57,7 +57,7 @@ export class ProjectController {
     @ApiResponse({ status: 200, description: 'fetched all projects success' })
     @ApiResponse({ status: 404, description: 'not found' })
     @ApiResponse({ status: 500, description: 'internal server error' })
-    @Get('getAll')
+    @Get('get-all')
     findAll() {
         return this.projectService.findAll();
     }

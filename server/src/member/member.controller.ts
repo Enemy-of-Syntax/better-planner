@@ -45,7 +45,7 @@ export class MemberController {
     @ApiResponse({ status: 200, description: 'successfully fetched all teams' })
     @ApiResponse({ status: 404, description: 'not found' })
     @ApiResponse({ status: 500, description: 'internal server error' })
-    @Get('getAll')
+    @Get('get-all')
     findAll() {
         return this.memberService.findAll();
     }

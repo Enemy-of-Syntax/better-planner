@@ -21,6 +21,7 @@ model user {
   imageId   String?    @unique @map("image_id")
   image     file?      @relation(fields: [imageId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   role      USER_ROLE?
+  status    INVITATION_STATUS?  
   password  String     @db.String()
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
@@ -111,7 +112,7 @@ model member {
   user          user          @relation("member", fields: [userId], references: [id])
   role          MEMBER_ROLE   @default(MEMBER)
   status        MEMBER_STATUS @default(ACTIVE)
-  createdUserId String
+  createdUserId String        @map("created_user_id")
   createdBy     user          @relation("admin", fields: [createdUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")
@@ -195,7 +196,6 @@ model file {
 }
 
 //Enum
-
 enum USER_ROLE {
   ADMIN
   MEMBER
@@ -224,4 +224,9 @@ enum MEMBER_STATUS {
   AVAILABLE // free and ready to take new assignments
   BUSY
   OUT_OF_OFFICE
+}
+
+enum INVITATION_STATUS {
+  INVITED
+  ACCEPTED
 }

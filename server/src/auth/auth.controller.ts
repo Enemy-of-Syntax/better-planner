@@ -25,6 +25,7 @@ import { IauthRequest } from 'src/@types/authRequest';
 import { AuthGuard } from './auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { fileStorage } from 'libs/file-storage';
+import { CreateMemberDto } from 'src/member/dto/create-member.dto';
 @Controller('auth')
 @ApiTags('auth')
 @ApiBearerAuth()
@@ -66,6 +67,14 @@ export class AuthController {
     @Get('profile/me')
     getProfile(@Request() request: IauthRequest) {
         return this.authService.profile(request.user.id);
+    }
+
+    @ApiResponse({ status: 200, description: 'token valid' })
+    @ApiResponse({ status: 401, description: 'invalid token' })
+    @ApiOperation({ summary: 'accept invite' })
+    @Post('accept-invite')
+    acceptInvitation(@Request() req, @Body() memberDto: CreateMemberDto) {
+        return this.authService.acceptInvite(req.headers.authorization, memberDto);
     }
 
     @ApiResponse({ status: 200, description: 'fetched user list successfully' })

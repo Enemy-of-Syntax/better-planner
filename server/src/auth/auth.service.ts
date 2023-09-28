@@ -10,13 +10,19 @@ import { JwtService } from '@nestjs/jwt';
 import { Responser } from 'libs/Responser';
 import { QueryService } from './auth.sql';
 import { v4 as uuidV4 } from 'uuid';
-import { user } from '@prisma/client';
+import { MEMBER_ROLE, MEMBER_STATUS, user } from '@prisma/client';
 import { imageType } from 'src/@types/imageType';
 import * as argon from 'argon2';
+import { MemberService } from 'src/member/member.service';
+import { CreateMemberDto } from 'src/member/dto/create-member.dto';
 
 @Injectable()
 export class AuthService {
-    constructor(private readonly jwt: JwtService, private queryService: QueryService) {}
+    constructor(
+        private readonly jwt: JwtService,
+        private queryService: QueryService,
+        private readonly memberService: MemberService,
+    ) {}
 
     async registerUser(dto: registerUserDto, Image?: Express.Multer.File) {
         const { email, password, name } = dto;
@@ -89,6 +95,40 @@ export class AuthService {
                     devMessage: 'Wrong credentials',
                 },
                 401,
+            );
+        }
+    }
+
+    async acceptInvite(token, memberDto: CreateMemberDto) {
+        const extractBearer = token.split(' ');
+        try {
+            const extractToken = await this.jwt.verifyAsync(extractBearer[1], {
+                secret: process.env.JWT_ACCESS_TOKEN,
+            });
+            const { id, email } = extractToken;
+            const invitedUser: user[] = await this.queryService.findUserById(id);
+
+            if (email === invitedUser[0]?.email) {
+                const createdMember = await this.memberService.create(
+                    memberDto,
+                    MEMBER_STATUS.ACTIVE,
+                    MEMBER_ROLE.MEMBER,
+                    memberDto.teamId,
+                );
+                return Responser({
+                    statusCode: 201,
+                    message: 'new member added to team',
+                    devMessage: 'new member added to team',
+                    body: createdMember,
+                });
+            }
+        } catch (err: any) {
+            throw new HttpException(
+                {
+                    message: 'Failed to invite new member',
+                    devMessage: err.message || '',
+                },
+                400,
             );
         }
     }

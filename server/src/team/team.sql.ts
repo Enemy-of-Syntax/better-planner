@@ -15,30 +15,6 @@ export class TeamQuery {
 
     async findAllTeams() {
         return this.prisma.$queryRaw(Prisma.sql`
-            SELECT 
-            public.teams.id,
-            public.teams.name AS team_name,
-            public.teams.image_id AS team_image_id,
-            public.files.name AS team_image_name,
-            public.files.path AS team_image_path,
-            public.teams.organization_id AS team_org_id,
-            public.organizations.name AS team_org_name,
-            public.organizations.status AS team_org_status,
-            public.teams.created_user_id AS created_user_id,
-            public.users.name AS created_user_name,
-            public.teams.created_at,
-            public.teams.updated_at
-
-            FROM public.teams
-
-            LEFT JOIN public.files ON public.teams.image_id = public.files.id
-            LEFT JOIN public.users ON public.teams.created_user_id=public.users.id
-            LEFT JOIN public.organizations ON public.teams.organization_id=public.organizations.id
-            `);
-    }
-
-    async findSingleTeam(id: string): Promise<team> {
-        return this.prisma.$queryRaw(Prisma.sql`
         SELECT 
         public.teams.id,
         public.teams.name AS team_name,
@@ -46,6 +22,7 @@ export class TeamQuery {
         public.files.name AS team_image_name,
         public.files.path AS team_image_path,
         public.teams.organization_id AS team_org_id,
+        array_agg(public.members.id) AS member_ids,
         public.organizations.name AS team_org_name,
         public.organizations.status AS team_org_status,
         public.teams.created_user_id AS created_user_id,
@@ -58,7 +35,62 @@ export class TeamQuery {
         LEFT JOIN public.files ON public.teams.image_id = public.files.id
         LEFT JOIN public.users ON public.teams.created_user_id=public.users.id
         LEFT JOIN public.organizations ON public.teams.organization_id=public.organizations.id
+        LEFT JOIN public.members ON public.teams.id=public.members.team_id
+
+        GROUP BY
+        public.teams.id,
+        public.teams.name ,
+        public.teams.image_id ,
+        public.files.name,
+        public.files.path,
+        public.teams.organization_id ,
+        public.organizations.name ,
+        public.organizations.status,
+        public.teams.created_user_id,
+        public.users.name,
+        public.teams.created_at,
+        public.teams.updated_at
+            `);
+    }
+
+    async findSingleTeam(id: string): Promise<team> {
+        return this.prisma.$queryRaw(Prisma.sql`
+        SELECT 
+        public.teams.id,
+        public.teams.name AS team_name,
+        public.teams.image_id AS team_image_id,
+        public.files.name AS team_image_name,
+        public.files.path AS team_image_path,
+        public.teams.organization_id AS team_org_id,
+        array_agg(public.members.id) AS member_ids,
+        public.organizations.name AS team_org_name,
+        public.organizations.status AS team_org_status,
+        public.teams.created_user_id AS created_user_id,
+        public.users.name AS created_user_name,
+        public.teams.created_at,
+        public.teams.updated_at
+
+        FROM public.teams
+
+        LEFT JOIN public.files ON public.teams.image_id = public.files.id
+        LEFT JOIN public.users ON public.teams.created_user_id=public.users.id
+        LEFT JOIN public.organizations ON public.teams.organization_id=public.organizations.id
+        LEFT JOIN public.members ON public.teams.id=public.members.team_id
         WHERE public.teams.id=${id}
+
+        GROUP BY
+        public.teams.id,
+        public.teams.name ,
+        public.teams.image_id ,
+        public.files.name,
+        public.files.path,
+        public.teams.organization_id ,
+        public.organizations.name ,
+        public.organizations.status,
+        public.teams.created_user_id,
+        public.users.name,
+        public.teams.created_at,
+        public.teams.updated_at
         `);
     }
 
@@ -72,7 +104,7 @@ export class TeamQuery {
                 imageId && imageId
             },${organizationId},${createdUserId},${newDate},${newDate})`;
 
-            return this.findSingleTeam(id);
+            return await this.findSingleTeam(id);
         } catch (error) {
             throw error;
         }

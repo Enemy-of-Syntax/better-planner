@@ -32,7 +32,7 @@ export class OrganizationController {
     @ApiResponse({ status: 404, description: 'not found' })
     @ApiResponse({ status: 401, description: 'bad request' })
     @ApiResponse({ status: 500, description: 'internal server error' })
-    @Get('getAll')
+    @Get('get-all')
     GetAll(): Promise<string | organization[]> {
         return this.organizationService.getAllOrganizations();
     }

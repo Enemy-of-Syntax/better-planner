@@ -25,7 +25,7 @@ export class BoardController {
     @ApiResponse({ status: 404, description: 'not found' })
     @ApiResponse({ status: 401, description: 'bad request' })
     @ApiResponse({ status: 500, description: 'internal server error' })
-    @Get('getAll')
+    @Get('get-all')
     GetAll() {
         return this.boardService.getAllBoards();
     }

@@ -1,16 +1,24 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { TeamQuery } from './team.sql';
 import { Responser } from 'libs/Responser';
-import { TeamDto, UpdateTeam } from './dto/team.dto';
+import { EmailDto, TeamDto, UpdateTeam } from './dto/team.dto';
 import { v4 as uuidV4 } from 'uuid';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { error } from 'console';
 import { imageType } from 'src/@types/imageType';
 import { QueryService } from 'src/auth/auth.sql';
+import EmailService from 'libs/mailservice';
+import { INVITATION_STATUS } from '@prisma/client';
+import { invitationTemplate } from 'template/invitation';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class TeamService {
-    constructor(private readonly teamQuery: TeamQuery, private readonly authSql: QueryService) {}
+    constructor(
+        private readonly teamQuery: TeamQuery,
+        private readonly authSql: QueryService,
+        private readonly Email: EmailService,
+        private readonly Jwt: JwtService,
+    ) {}
 
     async getAllTeams() {
         try {
@@ -28,6 +36,49 @@ export class TeamService {
                     devMessage: err.message || '',
                 },
                 404,
+            );
+        }
+    }
+
+    async emailInvite(email: EmailDto, userId: string) {
+        try {
+            const userEmail: any = await this.authSql.findUserById(userId);
+            const payload = {
+                id: userEmail[0].id,
+                email: userEmail[0].email,
+                teamId: email.teamId,
+            };
+
+            const invitationToken = await this.Jwt.signAsync(payload, {
+                secret: process.env.JWT_INVITE_TOKEN,
+                expiresIn: '1d',
+            });
+
+            await this.Email.sendMail({
+                from: userEmail[0].email,
+                to: email.email,
+                subject: 'Invitation To Our Work Space',
+                html: invitationTemplate(invitationToken),
+            });
+            const updatedUser = await this.authSql.updateUserStatus(
+                INVITATION_STATUS.INVITED,
+                email.email,
+            );
+            console.log(updatedUser);
+
+            return Responser({
+                statusCode: 200,
+                message: 'Invitation email sent successfully!',
+                devMessage: 'Invitation Success!',
+                body: updatedUser,
+            });
+        } catch (err: any) {
+            throw new HttpException(
+                {
+                    message: 'Failed to invite member',
+                    devMessage: err.message || '',
+                },
+                400,
             );
         }
     }

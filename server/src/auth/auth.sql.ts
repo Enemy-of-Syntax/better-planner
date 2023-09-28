@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, user, file, USER_ROLE } from '@prisma/client';
+import { Prisma, user, file, USER_ROLE, INVITATION_STATUS } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { v4 as uuidV4 } from 'uuid';
-import { updateUserDto } from './dto';
 @Injectable()
 export class QueryService {
     constructor(private readonly prisma: PrismaService) {}
@@ -13,6 +12,7 @@ export class QueryService {
             SELECT 
             public.users.id,
             public.users.email,
+            public.users.status,
             public.users.name AS user_name,
             public.users.role,
             public.users.image_id,
@@ -35,6 +35,7 @@ export class QueryService {
             SELECT 
             public.users.id,
             public.users.email,
+            public.users.status,
             public.users.name AS user_name,
             public.users.role,
             public.users.image_id,
@@ -56,6 +57,7 @@ export class QueryService {
             SELECT 
             public.users.id,
             public.users.email,
+            public.users.status,
             public.users.name AS user_name,
             public.users.role,
             public.users.image_id,
@@ -109,6 +111,15 @@ export class QueryService {
                                     `;
         let updArr: user[] | undefined = await this.findUserById(id);
         return updArr[0];
+    }
+
+    async updateUserStatus(status: INVITATION_STATUS, email: string) {
+        console.log(status, email);
+        await this.prisma.$executeRaw`UPDATE public.users 
+                                       SET status=${status}
+                                       WHERE email=${email}
+                                       `;
+        return await this.findUserByEmail(email);
     }
 
     async updateUserRole(userId: string) {

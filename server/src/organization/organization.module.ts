@@ -5,6 +5,7 @@ import { OrganizationController } from './organization.controller';
 import { OrganizationService } from './organization.service';
 import { QueryService } from 'src/auth/auth.sql';
 import { JwtService } from '@nestjs/jwt';
+import { AuthService } from 'src/auth/auth.service';
 
 @Module({
     providers: [organizationQuery, PrismaService, OrganizationService, QueryService, JwtService],

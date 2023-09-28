@@ -3,10 +3,11 @@ import { MEMBER_STATUS, MEMBER_ROLE, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
+import { TeamQuery } from 'src/team/team.sql';
 
 @Injectable()
 export class memberQuery {
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(private readonly prisma: PrismaService, private readonly teamsql: TeamQuery) {}
 
     async getAllMembers() {
         return await this.prisma.$queryRaw(Prisma.sql`
@@ -24,7 +25,7 @@ export class memberQuery {
     FROM
         public.members m
     LEFT JOIN
-        public.users u1 ON m."createdUserId" = u1.id
+        public.users u1 ON m.created_user_id = u1.id
     LEFT JOIN
         public.users u2 ON m.user_id = u2.id
     LEFT JOIN
@@ -48,7 +49,7 @@ export class memberQuery {
     FROM
         public.members m
     LEFT JOIN
-        public.users u1 ON m."createdUserId" = u1.id
+        public.users u1 ON m.created_user_id = u1.id
     LEFT JOIN
         public.users u2 ON m.user_id = u2.id
     LEFT JOIN
@@ -68,10 +69,13 @@ export class memberQuery {
         dto: CreateMemberDto,
         status: MEMBER_STATUS,
         role: MEMBER_ROLE,
-        userId: string,
+        teamId: string,
     ) {
+        const team = await this.teamsql.findSingleTeam(teamId);
+        const userId = team[0].created_user_id;
+        console.log(userId);
         await this.prisma.$executeRaw`INSERT INTO public.members 
-                                      (id,team_id,user_id,role,status,"createdUserId",created_at,updated_at)
+                                      (id,team_id,user_id,role,status,created_user_id,created_at,updated_at)
                                       VALUES (${id},${dto.teamId},${
             dto.userId
         },${role},${status},${userId},${new Date()},${new Date()})`;

@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { TeamService } from './team.service';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { TeamDto, UpdateTeam } from './dto/team.dto';
+import { EmailDto, TeamDto, UpdateTeam } from './dto/team.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { IauthRequest } from 'src/@types/authRequest';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -26,7 +26,7 @@ import { fileStorage } from 'libs/file-storage';
 export class TeamController {
     constructor(private readonly teamService: TeamService) {}
 
-    @Get('getAll')
+    @Get('get-all')
     GetAllTeams() {
         return this.teamService.getAllTeams();
     }
@@ -46,6 +46,11 @@ export class TeamController {
         @UploadedFile() Image?: Express.Multer.File,
     ) {
         return this.teamService.createNewTeam(dto, req.user.id, Image);
+    }
+
+    @Post('member/invite')
+    InviteEmail(@Body() email: EmailDto, @Request() req: IauthRequest) {
+        return this.teamService.emailInvite(email, req.user.id);
     }
 
     @ApiConsumes('multipart/form-data')

@@ -20,9 +20,10 @@ export class MemberService {
             const memberAlreadyExist: any = await this.memberQuery.findMemberByUserId(
                 createMemberDto.userId,
             );
+            console.log(memberAlreadyExist);
             if (memberAlreadyExist[0]) throw new Error('member already exist');
-
             const id = await uuidV4();
+
             const newMember = await this.memberQuery.createMember(
                 id,
                 createMemberDto,

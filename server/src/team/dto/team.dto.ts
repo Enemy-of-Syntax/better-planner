@@ -1,24 +1,20 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
+import { IsEmail, IsNotEmpty } from 'class-validator';
 
 export class TeamDto {
     constructor() {
         this.name = '';
-        this.memberId = [];
+        this.memberEmail = '';
         this.organizationId = '';
     }
 
     @ApiProperty()
     name: string;
 
-    @ApiProperty({
-        type: 'array',
-        items: {
-            type: 'string',
-        },
-    })
-    @Transform(({ value }) => value.split(','))
-    memberId: string[];
+    @ApiProperty()
+    @IsEmail()
+    memberEmail: string;
 
     @ApiProperty()
     organizationId: string;
@@ -28,3 +24,18 @@ export class TeamDto {
 }
 
 export class UpdateTeam extends PartialType(TeamDto) {}
+
+export class EmailDto {
+    constructor() {
+        this.email = '';
+        this.teamId = '';
+    }
+    @ApiProperty({ type: 'string' })
+    @IsNotEmpty()
+    @IsEmail()
+    email: string;
+
+    @ApiProperty({ type: 'string' })
+    @IsNotEmpty()
+    teamId: string;
+}
