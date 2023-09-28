@@ -29,25 +29,24 @@ import { fileStorage } from 'libs/file-storage';
 import { CreateMemberDto } from 'src/member/dto/create-member.dto';
 @Controller('auth')
 @ApiTags('auth')
-@ApiBearerAuth()
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
-    @ApiResponse({ status: 200, description: 'user register success' })
-    @ApiResponse({ status: 400, description: 'bad request ! register failed' })
-    @ApiResponse({ status: 409, description: 'user already exist' })
-    @ApiResponse({ status: 500, description: 'internal server error' })
-    @ApiBody({
-        description: 'user register',
-        type: registerUserDto,
-    })
-    @ApiConsumes('multipart/form-data')
-    @ApiOperation({ summary: 'user register' })
-    @UseInterceptors(FileInterceptor('image', fileStorage))
-    @Post('register')
-    RegisterUser(@Body() dto: registerUserDto, @UploadedFile() image: Express.Multer.File) {
-        return this.authService.registerUser(dto, image);
-    }
+    // @ApiResponse({ status: 200, description: 'user register success' })
+    // @ApiResponse({ status: 400, description: 'bad request ! register failed' })
+    // @ApiResponse({ status: 409, description: 'user already exist' })
+    // @ApiResponse({ status: 500, description: 'internal server error' })
+    // @ApiBody({
+    //     description: 'user register',
+    //     type: registerUserDto,
+    // })
+    // @ApiConsumes('multipart/form-data')
+    // @ApiOperation({ summary: 'user register' })
+    // @UseInterceptors(FileInterceptor('image', fileStorage))
+    // @Post('register')
+    // RegisterUser(@Body() dto: registerUserDto, @UploadedFile() image: Express.Multer.File) {
+    //     return this.authService.registerUser(dto, image);
+    // }
 
     @ApiResponse({ status: 200, description: 'user login success' })
     @ApiResponse({ status: 401, description: 'wrong credentials' })
@@ -76,19 +75,20 @@ export class AuthController {
 
     @ApiResponse({ status: 200, description: 'token valid' })
     @ApiResponse({ status: 401, description: 'invalid token' })
-    @UseGuards(AuthGuard)
-    @ApiOperation({ summary: 'profile me' })
-    @Get('profile/me')
-    getProfile(@Request() request: IauthRequest) {
-        return this.authService.profile(request.user.id);
-    }
-
-    @ApiResponse({ status: 200, description: 'token valid' })
-    @ApiResponse({ status: 401, description: 'invalid token' })
     @ApiOperation({ summary: 'accept invite' })
     @Post('accept-invite')
     acceptInvitation(@Request() req, @Body() memberDto: CreateMemberDto) {
         return this.authService.acceptInvite(req.headers.authorization, memberDto);
+    }
+
+    @ApiResponse({ status: 200, description: 'token valid' })
+    @ApiResponse({ status: 401, description: 'invalid token' })
+    @UseGuards(AuthGuard)
+    @ApiOperation({ summary: 'profile me' })
+    @ApiBearerAuth()
+    @Get('profile/me')
+    getProfile(@Request() request: IauthRequest) {
+        return this.authService.profile(request.user.id);
     }
 
     @ApiResponse({ status: 200, description: 'fetched user list successfully' })
@@ -97,6 +97,8 @@ export class AuthController {
     @ApiResponse({ status: 404, description: 'not found' })
     @ApiResponse({ status: 500, description: 'internal server error' })
     @ApiOperation({ summary: 'all users' })
+    @UseGuards(AuthGuard)
+    @ApiBearerAuth()
     @Get('profile/all')
     getAllProfile() {
         return this.authService.allProfile();

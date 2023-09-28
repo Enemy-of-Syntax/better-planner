@@ -112,7 +112,6 @@ export class AuthService {
             if (userCode.toString() === code) {
                 const hashPw = await argon.hash(newPassword);
                 await this.queryService.updateUserRecoveryCode(null, email);
-                await this.queryService.updateUserStatus(INVITATION_STATUS.ACCEPTED, email);
                 const updatedUser = await this.queryService.updateUserPassword(email, hashPw);
                 if (!updatedUser) throw new Error();
 
