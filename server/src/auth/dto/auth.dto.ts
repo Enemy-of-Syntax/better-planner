@@ -40,3 +40,18 @@ export class forgotPwDto {
     @ApiProperty()
     email: string;
 }
+
+export class resetPwDto {
+    constructor() {
+        (this.email = ''), (this.code = ''), (this.newPassword = '');
+    }
+
+    @ApiProperty()
+    email: string;
+
+    @ApiProperty()
+    code: string;
+
+    @ApiProperty()
+    newPassword: string;
+}

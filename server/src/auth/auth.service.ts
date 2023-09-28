@@ -5,12 +5,12 @@ import {
     NotFoundException,
     UnauthorizedException,
 } from '@nestjs/common';
-import { forgotPwDto, loginUserDto, registerUserDto, updateUserDto } from './dto';
+import { forgotPwDto, loginUserDto, registerUserDto, resetPwDto, updateUserDto } from './dto';
 import { JwtService } from '@nestjs/jwt';
 import { Responser } from 'libs/Responser';
 import { QueryService } from './auth.sql';
 import { v4 as uuidV4 } from 'uuid';
-import { MEMBER_ROLE, MEMBER_STATUS, user } from '@prisma/client';
+import { INVITATION_STATUS, MEMBER_ROLE, MEMBER_STATUS, user } from '@prisma/client';
 import { imageType } from 'src/@types/imageType';
 import * as argon from 'argon2';
 import { MemberService } from 'src/member/member.service';
@@ -76,9 +76,10 @@ export class AuthService {
         try {
             const randomCode = Math.round(Math.random() * 1000000);
 
-            const isFoundUser = await this.queryService.findUserByEmail(dto.email);
+            const isFoundUser: any = await this.queryService.findUserByEmail(dto.email);
             if (!isFoundUser) throw new error('user not found');
 
+            await this.queryService.updateUserRecoveryCode(randomCode, isFoundUser[0]?.email);
             await this.Email.sendMail({
                 from: 'naingaung9863@gmail.com',
                 to: isFoundUser[0]?.email,
@@ -86,11 +87,46 @@ export class AuthService {
                 html: recoverPw(randomCode),
             });
 
-            return 'recovery code sent successfully';
+            return Responser({
+                statusCode: 200,
+                message: 'code sent success',
+                devMessage: 'code sent success',
+                body: randomCode,
+            });
         } catch (err: any) {
             throw new HttpException(
                 {
                     message: 'Something went wrong!',
+                    devMessage: err.message || '',
+                },
+                400,
+            );
+        }
+    }
+
+    async passwordReset(dto: resetPwDto) {
+        const { email, code, newPassword } = dto;
+        try {
+            const user: any = await this.queryService.findUserByEmail(email);
+            const userCode = user[0]?.recovery_code;
+            if (userCode.toString() === code) {
+                const hashPw = await argon.hash(newPassword);
+                await this.queryService.updateUserRecoveryCode(null, email);
+                await this.queryService.updateUserStatus(INVITATION_STATUS.ACCEPTED, email);
+                const updatedUser = await this.queryService.updateUserPassword(email, hashPw);
+                if (!updatedUser) throw new Error();
+
+                return Responser({
+                    statusCode: 201,
+                    message: 'user password updated successfully',
+                    devMessage: 'user password updated successfully',
+                    body: updatedUser,
+                });
+            }
+        } catch (err: any) {
+            throw new HttpException(
+                {
+                    message: 'Failed to reset your password',
                     devMessage: err.message || '',
                 },
                 400,

@@ -15,6 +15,7 @@ export class QueryService {
             public.users.status,
             public.users.name AS user_name,
             public.users.role,
+            public.users.recovery_code,
             public.users.image_id,
             public.files.name AS image_name,
             public.files.path,
@@ -38,6 +39,7 @@ export class QueryService {
             public.users.status,
             public.users.name AS user_name,
             public.users.role,
+            public.users.recovery_code,
             public.users.image_id,
             public.files.name AS image_name,
             public.files.path,
@@ -60,6 +62,7 @@ export class QueryService {
             public.users.status,
             public.users.name AS user_name,
             public.users.role,
+            public.users.recovery_code,
             public.users.image_id,
             public.files.name AS image_name,
             public.files.path,
@@ -122,11 +125,28 @@ export class QueryService {
         return await this.findUserByEmail(email);
     }
 
+    async updateUserRecoveryCode(code: number | null, email: string) {
+        console.log(code);
+        return await this.prisma.$executeRaw`UPDATE public.users
+                                              SET recovery_code=${code && code}
+                                              WHERE email=${email}
+                                              `;
+    }
+
     async updateUserRole(userId: string) {
         return await this.prisma.$executeRaw`UPDATE public.users   
                                       SET role=${USER_ROLE.ADMIN},
                                           updated_at=${new Date()}
                                           WHERE public.users.id=${userId}
                                       `;
+    }
+
+    async updateUserPassword(email: string, password: string) {
+        await this.prisma.$executeRaw`UPDATE public.users 
+                                            SET password=${password}
+                                            WHERE email=${email}
+
+        `;
+        return await this.findUserByEmail(email);
     }
 }

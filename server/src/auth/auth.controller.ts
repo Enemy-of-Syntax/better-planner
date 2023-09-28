@@ -3,6 +3,7 @@ import {
     Controller,
     Get,
     Header,
+    Param,
     Post,
     Put,
     Req,
@@ -19,7 +20,7 @@ import {
     ApiResponse,
     ApiTags,
 } from '@nestjs/swagger';
-import { forgotPwDto, loginUserDto, registerUserDto, updateUserDto } from './dto';
+import { forgotPwDto, loginUserDto, registerUserDto, resetPwDto, updateUserDto } from './dto';
 import { AuthService } from './auth.service';
 import { IauthRequest } from 'src/@types/authRequest';
 import { AuthGuard } from './auth.guard';
@@ -65,6 +66,12 @@ export class AuthController {
     @Post('forgot-password')
     forgotPassword(@Body() dto: forgotPwDto) {
         return this.authService.passwordForgot(dto);
+    }
+
+    @ApiOperation({ summary: 'reset password' })
+    @Post('reset-password')
+    ResetPassword(@Body() dto: resetPwDto) {
+        return this.authService.passwordReset(dto);
     }
 
     @ApiResponse({ status: 200, description: 'token valid' })

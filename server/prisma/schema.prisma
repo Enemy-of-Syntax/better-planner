@@ -22,6 +22,7 @@ model user {
   image     file?      @relation(fields: [imageId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   role      USER_ROLE?
   status    INVITATION_STATUS?  
+  recoveryCode  String? @db.String()    @map("recovery_code")
   password  String     @db.String()
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
