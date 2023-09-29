@@ -17,13 +17,15 @@ datasource db {
 model user {
   id        String     @id @unique @default(uuid())
   email     String     @unique
-  name      String     @db.String()
+  name      String?     @db.String()
   imageId   String?    @unique @map("image_id")
   image     file?      @relation(fields: [imageId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   role      USER_ROLE?
   status    INVITATION_STATUS?  
   recoveryCode  String? @db.String()    @map("recovery_code")
+  refreshToken String?   @map("refresh_token")
   password  String     @db.String()
+  codeValidTime DateTime? @map("code_valid_time")
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
 

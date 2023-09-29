@@ -20,7 +20,15 @@ import {
     ApiResponse,
     ApiTags,
 } from '@nestjs/swagger';
-import { forgotPwDto, loginUserDto, registerUserDto, resetPwDto, updateUserDto } from './dto';
+import {
+    forgotPwDto,
+    loginUserDto,
+    registerUserDto,
+    resetPwDto,
+    updateRefreshTokenDto,
+    updateUserDto,
+    verifyOTPcode,
+} from './dto';
 import { AuthService } from './auth.service';
 import { IauthRequest } from 'src/@types/authRequest';
 import { AuthGuard } from './auth.guard';
@@ -32,21 +40,21 @@ import { CreateMemberDto } from 'src/member/dto/create-member.dto';
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
-    // @ApiResponse({ status: 200, description: 'user register success' })
-    // @ApiResponse({ status: 400, description: 'bad request ! register failed' })
-    // @ApiResponse({ status: 409, description: 'user already exist' })
-    // @ApiResponse({ status: 500, description: 'internal server error' })
-    // @ApiBody({
-    //     description: 'user register',
-    //     type: registerUserDto,
-    // })
-    // @ApiConsumes('multipart/form-data')
-    // @ApiOperation({ summary: 'user register' })
-    // @UseInterceptors(FileInterceptor('image', fileStorage))
-    // @Post('register')
-    // RegisterUser(@Body() dto: registerUserDto, @UploadedFile() image: Express.Multer.File) {
-    //     return this.authService.registerUser(dto, image);
-    // }
+    @ApiResponse({ status: 200, description: 'user register success' })
+    @ApiResponse({ status: 400, description: 'bad request ! register failed' })
+    @ApiResponse({ status: 409, description: 'user already exist' })
+    @ApiResponse({ status: 500, description: 'internal server error' })
+    @ApiBody({
+        description: 'user register',
+        type: registerUserDto,
+    })
+    @ApiConsumes('multipart/form-data')
+    @ApiOperation({ summary: 'user register' })
+    @UseInterceptors(FileInterceptor('image', fileStorage))
+    @Post('register')
+    RegisterUser(@Body() dto: registerUserDto, @UploadedFile() image: Express.Multer.File) {
+        return this.authService.registerUser(dto, image);
+    }
 
     @ApiResponse({ status: 200, description: 'user login success' })
     @ApiResponse({ status: 401, description: 'wrong credentials' })
@@ -67,18 +75,28 @@ export class AuthController {
         return this.authService.passwordForgot(dto);
     }
 
+    @ApiOperation({ summary: 'verify otp' })
+    @Post('verify-otp')
+    verifyOtp(@Body() dto: verifyOTPcode) {
+        return this.authService.verifyOtpCode(dto);
+    }
+
     @ApiOperation({ summary: 'reset password' })
     @Post('reset-password')
     ResetPassword(@Body() dto: resetPwDto) {
         return this.authService.passwordReset(dto);
     }
 
-    @ApiResponse({ status: 200, description: 'token valid' })
-    @ApiResponse({ status: 401, description: 'invalid token' })
     @ApiOperation({ summary: 'accept invite' })
     @Post('accept-invite')
     acceptInvitation(@Request() req, @Body() memberDto: CreateMemberDto) {
-        return this.authService.acceptInvite(req.headers.authorization, memberDto);
+        return this.authService.acceptInvite(req.headers, memberDto);
+    }
+
+    @ApiOperation({ summary: 'request refresh token' })
+    @Get('request-refresh-token')
+    requestRefreshToken(@Request() req: IauthRequest) {
+        return this.authService.updateRefreshToken(req);
     }
 
     @ApiResponse({ status: 200, description: 'token valid' })

@@ -5,13 +5,15 @@
 Table users {
   id String [pk]
   email String [unique, not null]
-  name String [not null]
+  name String
   imageId String [unique]
   image files
   role USER_ROLE
   status INVITATION_STATUS
   recoveryCode String
+  refreshToken String
   password String [not null]
+  codeValidTime DateTime
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
   member members [not null]

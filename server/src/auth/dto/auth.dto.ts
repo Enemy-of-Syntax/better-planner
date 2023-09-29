@@ -1,6 +1,5 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsEmail, MIN_LENGTH, Min, MinLength } from 'class-validator';
-
+import { IsEmail, MinLength } from 'class-validator';
 export class registerUserDto {
     constructor() {
         (this.email = ''), (this.name = ''), (this.password = '');
@@ -14,13 +13,11 @@ export class registerUserDto {
     name: string;
 
     @ApiProperty()
-    @Min(6)
     password: string;
 
     @ApiProperty({ type: 'string', format: 'binary', required: false })
     public image?: string;
 }
-
 export class updateUserDto extends PartialType(registerUserDto) {}
 export class loginUserDto {
     constructor() {
@@ -35,7 +32,6 @@ export class loginUserDto {
     @MinLength(6)
     password: string;
 }
-
 export class forgotPwDto {
     constructor() {
         this.email = '';
@@ -43,7 +39,6 @@ export class forgotPwDto {
     @ApiProperty()
     email: string;
 }
-
 export class resetPwDto {
     constructor() {
         (this.email = ''), (this.code = ''), (this.newPassword = '');
@@ -59,4 +54,23 @@ export class resetPwDto {
     @ApiProperty()
     @MinLength(6)
     newPassword: string;
+}
+export class updateRefreshTokenDto {
+    constructor() {
+        this.token = '';
+    }
+
+    token: string;
+}
+
+export class verifyOTPcode {
+    constructor() {
+        (this.email = ''), (this.code = '');
+    }
+
+    @ApiProperty()
+    email: string;
+
+    @ApiProperty()
+    code: string;
 }

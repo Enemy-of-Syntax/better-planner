@@ -5,7 +5,15 @@ import {
     NotFoundException,
     UnauthorizedException,
 } from '@nestjs/common';
-import { forgotPwDto, loginUserDto, registerUserDto, resetPwDto, updateUserDto } from './dto';
+import {
+    forgotPwDto,
+    loginUserDto,
+    registerUserDto,
+    resetPwDto,
+    updateRefreshTokenDto,
+    updateUserDto,
+    verifyOTPcode,
+} from './dto';
 import { JwtService } from '@nestjs/jwt';
 import { Responser } from 'libs/Responser';
 import { QueryService } from './auth.sql';
@@ -18,6 +26,7 @@ import { CreateMemberDto } from 'src/member/dto/create-member.dto';
 import { error } from 'console';
 import EmailService from 'libs/mailservice';
 import { recoverPw } from 'template/recoverPw';
+import { setInterval } from 'timers/promises';
 
 @Injectable()
 export class AuthService {
@@ -31,7 +40,11 @@ export class AuthService {
     async registerUser(dto: registerUserDto, Image?: Express.Multer.File) {
         const { email, password, name } = dto;
         try {
-            const isUserAlrExist: user[] = await this.queryService.findUserByEmail(dto.email);
+            const LowerCaseDtoEmail = email.toLowerCase();
+
+            const isUserAlrExist: user[] = await this.queryService.findUserByEmail(
+                LowerCaseDtoEmail,
+            );
             if (isUserAlrExist.length > 0) throw new Error('credentials already taken');
 
             const hashPw = await argon.hash(password);
@@ -47,7 +60,7 @@ export class AuthService {
 
             const createUser = await this.queryService.insertNewUser({
                 id: uuid,
-                email,
+                email: LowerCaseDtoEmail,
                 name,
                 password: hashPw,
                 ...(image && {
@@ -72,12 +85,56 @@ export class AuthService {
         }
     }
 
+    async verifyOtpCode(dto: verifyOTPcode) {
+        let founduser: any = await this.queryService.findUserByEmail(dto.email);
+        let previousCodeCreatedTime = founduser[0].code_valid_time;
+
+        const timeObj = {
+            minutes: previousCodeCreatedTime.getMinutes(),
+            seconds: previousCodeCreatedTime.getSeconds(),
+        };
+        const ExpiredTimeObj = {
+            minutes: previousCodeCreatedTime.getMinutes() + 1,
+            seconds: previousCodeCreatedTime.getSeconds(),
+        };
+
+        let createdTimeStamp = `${timeObj.minutes}${
+            timeObj.seconds < 10 ? `0${timeObj.seconds}` : timeObj.seconds
+        }`;
+        let expiredTimeStamp = `${ExpiredTimeObj.minutes}${
+            ExpiredTimeObj.seconds < 10 ? `0${ExpiredTimeObj.seconds}` : ExpiredTimeObj.seconds
+        }`;
+        let currentTimeStamp = `${new Date().getMinutes()}${
+            new Date().getSeconds() < 10 ? `0${new Date().getSeconds()}` : new Date().getSeconds()
+        }`;
+
+        if (currentTimeStamp >= createdTimeStamp && currentTimeStamp <= expiredTimeStamp) {
+            return Responser({
+                statusCode: 200,
+                message: 'OTP code valid!',
+                devMessage: 'OTP code valid',
+                body: {
+                    validOTPcode: dto.code,
+                    valid: true,
+                },
+            });
+        } else {
+            throw new HttpException(
+                {
+                    message: 'OTP not valid',
+                    devMessage: 'OTP not valid',
+                },
+                404,
+            );
+        }
+    }
+
     async passwordForgot(dto: forgotPwDto) {
         try {
-            const randomCode = Math.round(Math.random() * 1000000);
-
             const isFoundUser: any = await this.queryService.findUserByEmail(dto.email);
-            if (!isFoundUser) throw new error('user not found');
+            if (!isFoundUser) throw new Error('user not found');
+
+            const randomCode = Math.round(Math.random() * 1000000);
 
             await this.queryService.updateUserRecoveryCode(randomCode, isFoundUser[0]?.email);
             await this.Email.sendMail({
@@ -136,7 +193,8 @@ export class AuthService {
     async loginUser(dto: loginUserDto) {
         const { email, password } = dto;
         try {
-            const foundUser: any = await this.queryService.findUserByEmail(email);
+            const lowerCaseDtoEmail = email.toLowerCase();
+            const foundUser: any = await this.queryService.findUserByEmail(lowerCaseDtoEmail);
             if (!foundUser) throw new UnauthorizedException('Wrong credentials');
 
             const passwordMatch = await argon.verify(foundUser[0].password, password);
@@ -146,6 +204,8 @@ export class AuthService {
                 email: foundUser[0].email,
                 id: foundUser[0].id,
             });
+
+            await this.queryService.updateRefreshToken(foundUser[0].id, tokens.refreshToken);
 
             return Responser({
                 statusCode: 200,
@@ -276,6 +336,36 @@ export class AuthService {
             throw new HttpException(
                 {
                     message: 'Failed to update profile',
+                    devMessage: err.message || '',
+                },
+                400,
+            );
+        }
+    }
+
+    async updateRefreshToken(req) {
+        const token = req.headers.authorization.split(' ')[1];
+
+        try {
+            const foundUser: any = await this.queryService.findUserByToken(token);
+            console.log(foundUser);
+            if (!foundUser || foundUser?.length === 0) throw new Error('token not valid');
+            const payload = {
+                id: foundUser[0].id,
+                email: foundUser[0].email,
+            };
+            console.log(payload);
+            const newTokens = await this.generateToken(payload);
+            return Responser({
+                statusCode: 200,
+                message: 'new tokens are generated',
+                devMessage: 'new tokens are generated',
+                body: newTokens,
+            });
+        } catch (err: any) {
+            throw new HttpException(
+                {
+                    message: 'Failed to update refresh token',
                     devMessage: err.message || '',
                 },
                 400,

@@ -16,6 +16,8 @@ export class QueryService {
             public.users.name AS user_name,
             public.users.role,
             public.users.recovery_code,
+            public.users.code_valid_time,
+            public.users.refresh_token,
             public.users.image_id,
             public.files.name AS image_name,
             public.files.path,
@@ -44,6 +46,7 @@ export class QueryService {
             public.files.name AS image_name,
             public.files.path,
             public.users.password,
+            public.users.code_valid_time,
             public.users.created_at,
             public.users.updated_at
             FROM public.users
@@ -67,6 +70,7 @@ export class QueryService {
             public.files.name AS image_name,
             public.files.path,
             public.users.password,
+            public.users.code_valid_time,
             public.users.created_at,
             public.users.updated_at
             FROM public.users
@@ -74,6 +78,12 @@ export class QueryService {
             ON public.users.image_id=public.files.id
             WHERE public.users.id=${id}
             `,
+        );
+    }
+
+    async findUserByToken(token: string) {
+        return await this.prisma.$queryRaw(
+            Prisma.sql`SELECT * FROM public.users WHERE refresh_token=${token}`,
         );
     }
 
@@ -126,9 +136,9 @@ export class QueryService {
     }
 
     async updateUserRecoveryCode(code: number | null, email: string) {
-        console.log(code);
         return await this.prisma.$executeRaw`UPDATE public.users
-                                              SET recovery_code=${code && code}
+                                              SET recovery_code=${code && code},
+                                                  code_valid_time=${new Date()}
                                               WHERE email=${email}
                                               `;
     }
@@ -148,5 +158,11 @@ export class QueryService {
 
         `;
         return await this.findUserByEmail(email);
+    }
+
+    async updateRefreshToken(id: string, token: string) {
+        return await this.prisma.$executeRaw`UPDATE public.users
+                                        SET refresh_token=${token}
+                                        WHERE id=${id}`;
     }
 }
