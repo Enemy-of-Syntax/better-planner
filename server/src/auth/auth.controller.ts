@@ -109,36 +109,36 @@ export class AuthController {
         return this.authService.profile(request.user.id);
     }
 
-    @ApiResponse({ status: 200, description: 'fetched user list successfully' })
-    @ApiResponse({ status: 400, description: 'bad request' })
-    @ApiResponse({ status: 401, description: 'unauthorized' })
-    @ApiResponse({ status: 404, description: 'not found' })
-    @ApiResponse({ status: 500, description: 'internal server error' })
-    @ApiOperation({ summary: 'all users' })
-    @UseGuards(AuthGuard)
-    @ApiBearerAuth()
-    @Get('profile/all')
-    getAllProfile() {
-        return this.authService.allProfile();
-    }
+    // @ApiResponse({ status: 200, description: 'fetched user list successfully' })
+    // @ApiResponse({ status: 400, description: 'bad request' })
+    // @ApiResponse({ status: 401, description: 'unauthorized' })
+    // @ApiResponse({ status: 404, description: 'not found' })
+    // @ApiResponse({ status: 500, description: 'internal server error' })
+    // @ApiOperation({ summary: 'all users' })
+    // @UseGuards(AuthGuard)
+    // @ApiBearerAuth()
+    // @Get('profile/all')
+    // getAllProfile() {
+    //     return this.authService.allProfile();
+    // }
 
-    @ApiResponse({ status: 201, description: 'updated user  successfully' })
-    @ApiResponse({ status: 400, description: 'bad request' })
-    @ApiResponse({ status: 401, description: 'unauthorized' })
-    @ApiResponse({ status: 404, description: 'not found' })
-    @ApiResponse({ status: 500, description: 'internal server error' })
-    @ApiOperation({ summary: 'update user' })
-    @ApiBody({ type: updateUserDto, description: 'update user' })
-    @ApiConsumes('multipart/form-data')
-    @ApiBearerAuth()
-    @UseGuards(AuthGuard)
-    @Put('profile/update')
-    @UseInterceptors(FileInterceptor('image', fileStorage))
-    updateProfile(
-        @Body() dto: updateUserDto,
-        @Req() req: IauthRequest,
-        @UploadedFile() image: Express.Multer.File,
-    ) {
-        return this.authService.updateProfile(dto, req.user.id, image);
-    }
+    // @ApiResponse({ status: 201, description: 'updated user  successfully' })
+    // @ApiResponse({ status: 400, description: 'bad request' })
+    // @ApiResponse({ status: 401, description: 'unauthorized' })
+    // @ApiResponse({ status: 404, description: 'not found' })
+    // @ApiResponse({ status: 500, description: 'internal server error' })
+    // @ApiOperation({ summary: 'update user' })
+    // @ApiBody({ type: updateUserDto, description: 'update user' })
+    // @ApiConsumes('multipart/form-data')
+    // @ApiBearerAuth()
+    // @UseGuards(AuthGuard)
+    // @Put('profile/update')
+    // @UseInterceptors(FileInterceptor('image', fileStorage))
+    // updateProfile(
+    //     @Body() dto: updateUserDto,
+    //     @Req() req: IauthRequest,
+    //     @UploadedFile() image: Express.Multer.File,
+    // ) {
+    //     return this.authService.updateProfile(dto, req.user.id, image);
+    // }
 }

@@ -15,9 +15,8 @@ export class ProjectService {
         private readonly authsql: QueryService,
     ) {}
     async create(
+        userId : string,
         createProjectDto: CreateProjectDto,
-        status: PROJECT_STATUS,
-        userId: string,
         Image?: Express.Multer.File,
     ) {
         try {
@@ -33,7 +32,6 @@ export class ProjectService {
             const newProject = await this.projectQuery.createNewProject(
                 projectId,
                 createProjectDto,
-                status,
                 image.id === '' ? null : image.id,
                 userId,
             );
@@ -103,7 +101,6 @@ export class ProjectService {
     async update(
         id: string,
         updateProjectDto: UpdateProjectDto,
-        status: PROJECT_STATUS,
         Image?: Express.Multer.File,
     ) {
         try {
@@ -121,7 +118,6 @@ export class ProjectService {
             const updatedProject = await this.projectQuery.updateProject(
                 id,
                 updateProjectDto,
-                status,
                 image.id === '' ? null : image.id,
             );
             if (!updatedProject) throw error;

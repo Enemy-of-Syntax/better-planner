@@ -10,7 +10,6 @@ import {
     loginUserDto,
     registerUserDto,
     resetPwDto,
-    updateRefreshTokenDto,
     updateUserDto,
     verifyOTPcode,
 } from './dto';
@@ -18,15 +17,13 @@ import { JwtService } from '@nestjs/jwt';
 import { Responser } from 'libs/Responser';
 import { QueryService } from './auth.sql';
 import { v4 as uuidV4 } from 'uuid';
-import { INVITATION_STATUS, MEMBER_ROLE, MEMBER_STATUS, user } from '@prisma/client';
+import { MEMBER_ROLE, MEMBER_STATUS, user } from '@prisma/client';
 import { imageType } from 'src/@types/imageType';
 import * as argon from 'argon2';
 import { MemberService } from 'src/member/member.service';
 import { CreateMemberDto } from 'src/member/dto/create-member.dto';
-import { error } from 'console';
 import EmailService from 'libs/mailservice';
 import { recoverPw } from 'template/recoverPw';
-import { setInterval } from 'timers/promises';
 
 @Injectable()
 export class AuthService {
@@ -107,7 +104,7 @@ export class AuthService {
         let currentTimeStamp = `${new Date().getMinutes()}${
             new Date().getSeconds() < 10 ? `0${new Date().getSeconds()}` : new Date().getSeconds()
         }`;
-
+        console.log(createdTimeStamp,currentTimeStamp,expiredTimeStamp)
         if (currentTimeStamp >= createdTimeStamp && currentTimeStamp <= expiredTimeStamp) {
             return Responser({
                 statusCode: 200,
@@ -134,8 +131,8 @@ export class AuthService {
             const isFoundUser: any = await this.queryService.findUserByEmail(dto.email);
             if (!isFoundUser) throw new Error('user not found');
 
-            const randomCode = Math.round(Math.random() * 1000000);
-
+            const randomCode= Number(Math.random().toFixed(6)) * 1000000
+        
             await this.queryService.updateUserRecoveryCode(randomCode, isFoundUser[0]?.email);
             await this.Email.sendMail({
                 from: 'naingaung9863@gmail.com',
@@ -162,23 +159,19 @@ export class AuthService {
     }
 
     async passwordReset(dto: resetPwDto) {
-        const { email, code, newPassword } = dto;
+        const { email, newPassword } = dto;
         try {
-            const user: any = await this.queryService.findUserByEmail(email);
-            const userCode = user[0]?.recovery_code;
-            if (userCode.toString() === code) {
-                const hashPw = await argon.hash(newPassword);
-                await this.queryService.updateUserRecoveryCode(null, email);
-                const updatedUser = await this.queryService.updateUserPassword(email, hashPw);
-                if (!updatedUser) throw new Error();
+            const hashPw = await argon.hash(newPassword);
+            await this.queryService.updateUserRecoveryCode(null, email);
+            const updatedUser = await this.queryService.updateUserPassword(email, hashPw);
+            if (!updatedUser) throw new Error();
 
-                return Responser({
-                    statusCode: 201,
-                    message: 'user password updated successfully',
-                    devMessage: 'user password updated successfully',
-                    body: updatedUser,
-                });
-            }
+            return Responser({
+                statusCode: 201,
+                message: 'user password updated successfully',
+                devMessage: 'user password updated successfully',
+                body: updatedUser,
+            });
         } catch (err: any) {
             throw new HttpException(
                 {
@@ -348,13 +341,11 @@ export class AuthService {
 
         try {
             const foundUser: any = await this.queryService.findUserByToken(token);
-            console.log(foundUser);
             if (!foundUser || foundUser?.length === 0) throw new Error('token not valid');
             const payload = {
                 id: foundUser[0].id,
                 email: foundUser[0].email,
             };
-            console.log(payload);
             const newTokens = await this.generateToken(payload);
             return Responser({
                 statusCode: 200,

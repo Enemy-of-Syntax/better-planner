@@ -41,15 +41,12 @@ export class forgotPwDto {
 }
 export class resetPwDto {
     constructor() {
-        (this.email = ''), (this.code = ''), (this.newPassword = '');
+        (this.email = ''), (this.newPassword = '');
     }
 
     @ApiProperty()
     @IsEmail()
     email: string;
-
-    @ApiProperty()
-    code: string;
 
     @ApiProperty()
     @MinLength(6)
