@@ -1,4 +1,5 @@
-import { Prisma, PrismaClient, user } from '@prisma/client';
+import { PrismaClient, user } from '@prisma/client';
+import * as argon from 'argon2';
 const prisma = new PrismaClient();
 
 const users = [
@@ -16,6 +17,31 @@ const users = [
     },
 ];
 
-const createUsers = async (usersArr) => {
-    await prisma.user.createMany(usersArr);
+const createUsers = async (user) => {
+    return await prisma.user.createMany({
+        data: {
+            email: user.email,
+            password: await argon.hash(user.password),
+        },
+    });
 };
+
+async function main() {
+    console.log('start seeding...');
+    console.log('creating users...');
+
+    for (let i = 0; i < users.length; i++) {
+        await createUsers(users[i]);
+    }
+
+    console.log('seeding finished');
+}
+
+main()
+    .catch((e) => {
+        console.error(e);
+        process.exit(1);
+    })
+    .finally(async () => {
+        await prisma.$disconnect();
+    });
