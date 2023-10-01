@@ -13,6 +13,7 @@ import { MemberModule } from './member/member.module';
 import { ProjectModule } from './project/project.module';
 import { BoardModule } from './board/board.module';
 import { MulterModule } from '@nestjs/platform-express';
+import { TasksModule } from './tasks/tasks.module';
 
 @Module({
     imports: [
@@ -29,6 +30,7 @@ import { MulterModule } from '@nestjs/platform-express';
         MemberModule,
         ProjectModule,
         BoardModule,
+        TasksModule,
     ],
     controllers: [AppController],
     providers: [AppService],

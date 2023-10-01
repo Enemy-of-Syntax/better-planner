@@ -5,22 +5,29 @@ CREATE TYPE "USER_ROLE" AS ENUM ('ADMIN', 'MEMBER', 'SUPER_ADMIN');
 CREATE TYPE "ORGANIZATION_STATUS" AS ENUM ('ACTIVE', 'BAN');
 
 -- CreateEnum
-CREATE TYPE "PROJECT_STATUS" AS ENUM ('ONGOING', 'SUSPENDED', 'COMPLETED');
+CREATE TYPE "PROJECT_STATUS" AS ENUM ('ACTIVE', 'CLOSED', 'ONHOLD');
 
 -- CreateEnum
-CREATE TYPE "MEMBER_ROLE" AS ENUM ('ADMIN', 'MEMBER');
+CREATE TYPE "MEMBER_ROLE" AS ENUM ('SUPER_ADMIN', 'ADMIN', 'LEADER', 'MEMBER');
 
 -- CreateEnum
 CREATE TYPE "MEMBER_STATUS" AS ENUM ('ACTIVE', 'INACTIVE', 'AVAILABLE', 'BUSY', 'OUT_OF_OFFICE');
+
+-- CreateEnum
+CREATE TYPE "INVITATION_STATUS" AS ENUM ('INVITED', 'ACCEPTED');
 
 -- CreateTable
 CREATE TABLE "users" (
     "id" STRING NOT NULL,
     "email" STRING NOT NULL,
-    "name" STRING NOT NULL,
+    "name" STRING,
     "image_id" STRING,
-    "role" "USER_ROLE",
+    "role" "USER_ROLE" DEFAULT 'MEMBER',
+    "status" "INVITATION_STATUS",
+    "recovery_code" STRING,
+    "refresh_token" STRING,
     "password" STRING NOT NULL,
+    "code_valid_time" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -44,8 +51,9 @@ CREATE TABLE "organizations" (
 CREATE TABLE "projects" (
     "id" STRING NOT NULL,
     "name" STRING NOT NULL,
+    "description" STRING NOT NULL,
     "image_id" STRING,
-    "status" "PROJECT_STATUS" NOT NULL DEFAULT 'ONGOING',
+    "status" "PROJECT_STATUS" NOT NULL DEFAULT 'ACTIVE',
     "organization_id" STRING,
     "created_user_id" STRING NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -81,11 +89,11 @@ CREATE TABLE "teams" (
 -- CreateTable
 CREATE TABLE "members" (
     "id" STRING NOT NULL,
-    "team_id" STRING NOT NULL,
+    "team_id" STRING,
     "user_id" STRING NOT NULL,
     "role" "MEMBER_ROLE" NOT NULL DEFAULT 'MEMBER',
     "status" "MEMBER_STATUS" NOT NULL DEFAULT 'ACTIVE',
-    "createdUserId" STRING NOT NULL,
+    "created_user_id" STRING NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -221,13 +229,13 @@ ALTER TABLE "teams" ADD CONSTRAINT "teams_organization_id_fkey" FOREIGN KEY ("or
 ALTER TABLE "teams" ADD CONSTRAINT "teams_created_user_id_fkey" FOREIGN KEY ("created_user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "members" ADD CONSTRAINT "members_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "teams"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "members" ADD CONSTRAINT "members_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "teams"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "members" ADD CONSTRAINT "members_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "members" ADD CONSTRAINT "members_createdUserId_fkey" FOREIGN KEY ("createdUserId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "members" ADD CONSTRAINT "members_created_user_id_fkey" FOREIGN KEY ("created_user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "taskAssignOnMember" ADD CONSTRAINT "taskAssignOnMember_member_id_fkey" FOREIGN KEY ("member_id") REFERENCES "members"("id") ON DELETE CASCADE ON UPDATE CASCADE;

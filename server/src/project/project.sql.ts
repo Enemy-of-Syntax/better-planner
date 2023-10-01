@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {  Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -104,15 +104,15 @@ export class projectQuery {
     //     );
     // }
 
-    async updateProject(
-        id: string,
-        dto: UpdateProjectDto,
-        imageId: string | null | undefined,
-    ) {
+    async updateProject(id: string, dto: UpdateProjectDto, imageId: string | null | undefined) {
         const existingProject: any = await this.findSingleProject(id);
 
         await this.prisma.$executeRaw`UPDATE public.projects    
-                                     SET   description=${dto.description==="" ? existingProject[0].project_description : dto.description}
+                                     SET   description=${
+                                         dto.description === ''
+                                             ? existingProject[0].project_description
+                                             : dto.description
+                                     }
                                            status=${dto.status},
                                            image_id=${imageId && imageId},
                                            updated_at=${new Date()}

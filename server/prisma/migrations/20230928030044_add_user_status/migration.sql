@@ -1,5 +1,0 @@
--- CreateEnum
-CREATE TYPE "INVITATION_STATUS" AS ENUM ('INVITED', 'ACCEPTED');
-
--- AlterTable
-ALTER TABLE "users" ADD COLUMN     "status" "INVITATION_STATUS";

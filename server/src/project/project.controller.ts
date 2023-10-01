@@ -24,7 +24,6 @@ import {
     ApiResponse,
     ApiTags,
 } from '@nestjs/swagger';
-import { PROJECT_STATUS } from '@prisma/client';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { IauthRequest } from 'src/@types/authRequest';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -49,7 +48,7 @@ export class ProjectController {
         @Body() createProjectDto: CreateProjectDto,
         @UploadedFile() image?: Express.Multer.File,
     ) {
-        return this.projectService.create( req.user.id,createProjectDto, image );
+        return this.projectService.create(req.user.id, createProjectDto, image);
     }
 
     @ApiResponse({ status: 200, description: 'fetched all projects success' })
@@ -62,7 +61,6 @@ export class ProjectController {
 
     @ApiResponse({ status: 200, description: 'fetch project detail success' })
     @ApiResponse({ status: 404, description: 'not found' })
-    @ApiResponse({ status: 400, description: 'bad request' })
     @ApiResponse({ status: 500, description: 'internal server error' })
     @Get('detail/:id')
     findOne(@Param('id') id: string) {

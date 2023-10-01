@@ -20,7 +20,7 @@ model user {
   name          String?            @db.String()
   imageId       String?            @unique @map("image_id")
   image         file?              @relation(fields: [imageId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  role          USER_ROLE?
+  role          USER_ROLE?         @default(MEMBER)
   status        INVITATION_STATUS?
   recoveryCode  String?            @map("recovery_code") @db.String()
   refreshToken  String?            @map("refresh_token")
@@ -73,8 +73,6 @@ model project {
 
   projectOnTeam ProjectOnTeam[]
   board         board[]
-  member        member[]
-
   @@map("projects")
 }
 
@@ -123,8 +121,6 @@ model member {
   updatedAt     DateTime      @updatedAt @map("updated_at")
 
   tasks     taskAssignOnMember[]
-  project   project?             @relation(fields: [projectId], references: [id])
-  projectId String?
 
   @@map("members")
 }
@@ -223,6 +219,7 @@ enum PROJECT_STATUS {
 enum MEMBER_ROLE {
   SUPER_ADMIN
   ADMIN
+  LEADER
   MEMBER
 }
 

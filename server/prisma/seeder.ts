@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 const users = [
     {
         email: 'mohmohaung737@gmail.com',
-        password: 'moh123',
+        password: 'moh12345@',
     },
     {
         email: 'kyawna2265@gmail.com',

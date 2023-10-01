@@ -8,7 +8,7 @@ Table users {
   name String
   imageId String [unique]
   image files
-  role USER_ROLE
+  role USER_ROLE [default: 'MEMBER']
   status INVITATION_STATUS
   recoveryCode String
   refreshToken String
@@ -42,9 +42,10 @@ Table organizations {
 Table projects {
   id String [pk]
   name String [unique, not null]
+  description String [not null]
   imageId String
   image files
-  status PROJECT_STATUS [not null, default: 'ONGOING']
+  status PROJECT_STATUS [not null, default: 'ACTIVE']
   organizationId String
   organization organizations
   createdUserId String [not null]
@@ -83,8 +84,8 @@ Table teams {
 
 Table members {
   id String [pk]
-  teamId String [not null]
-  team teams [not null]
+  teamId String
+  team teams
   userId String [not null]
   user users [not null]
   role MEMBER_ROLE [not null, default: 'MEMBER']
@@ -172,14 +173,15 @@ Enum ORGANIZATION_STATUS {
 }
 
 Enum PROJECT_STATUS {
-  ONGOING
-  SUSPENDED
-  COMPLETED
+  ACTIVE
+  CLOSED
+  ONHOLD
 }
 
 Enum MEMBER_ROLE {
   SUPER_ADMIN
   ADMIN
+  LEADER
   MEMBER
 }
 
