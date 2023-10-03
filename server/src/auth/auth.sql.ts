@@ -81,12 +81,6 @@ export class QueryService {
         );
     }
 
-    async findUserByToken(token: string) {
-        return await this.prisma.$queryRaw(
-            Prisma.sql`SELECT * FROM public.users WHERE refresh_token=${token}`,
-        );
-    }
-
     async insertNewUser({ id, email, imageId, name, password }) {
         const newDate = new Date();
         await this.prisma
@@ -160,7 +154,8 @@ export class QueryService {
         return await this.findUserByEmail(email);
     }
 
-    async updateRefreshToken(id: string, token: string) {
+    async updateRefreshToken(id: string, token) {
+        console.log(token);
         return await this.prisma.$executeRaw`UPDATE public.users
                                         SET refresh_token=${token}
                                         WHERE id=${id}`;

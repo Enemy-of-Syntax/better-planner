@@ -104,7 +104,7 @@ export class AuthService {
         let currentTimeStamp = `${new Date().getMinutes()}${
             new Date().getSeconds() < 10 ? `0${new Date().getSeconds()}` : new Date().getSeconds()
         }`;
-        console.log(createdTimeStamp,currentTimeStamp,expiredTimeStamp)
+        console.log(createdTimeStamp, currentTimeStamp, expiredTimeStamp);
         if (currentTimeStamp >= createdTimeStamp && currentTimeStamp <= expiredTimeStamp) {
             return Responser({
                 statusCode: 200,
@@ -121,7 +121,7 @@ export class AuthService {
                     message: 'OTP not valid',
                     devMessage: 'OTP not valid',
                 },
-                404,
+                401,
             );
         }
     }
@@ -131,8 +131,8 @@ export class AuthService {
             const isFoundUser: any = await this.queryService.findUserByEmail(dto.email);
             if (!isFoundUser) throw new Error('user not found');
 
-            const randomCode= Number(Math.random().toFixed(6)) * 1000000
-        
+            const randomCode = Number(Math.random().toFixed(6)) * 1000000;
+
             await this.queryService.updateUserRecoveryCode(randomCode, isFoundUser[0]?.email);
             await this.Email.sendMail({
                 from: 'naingaung9863@gmail.com',
@@ -153,7 +153,7 @@ export class AuthService {
                     message: 'Something went wrong!',
                     devMessage: err.message || '',
                 },
-                400,
+                401,
             );
         }
     }
@@ -178,7 +178,7 @@ export class AuthService {
                     message: 'Failed to reset your password',
                     devMessage: err.message || '',
                 },
-                400,
+                401,
             );
         }
     }
@@ -331,22 +331,30 @@ export class AuthService {
                     message: 'Failed to update profile',
                     devMessage: err.message || '',
                 },
-                400,
+                401,
             );
         }
     }
 
-    async updateRefreshToken(req) {
-        const token = req.headers.authorization.split(' ')[1];
+    async refreshTokenUpdate(req) {
+        const token = req.headers.authorization?.split(' ')[1];
 
+        const extractObj = await this.jwt.verifyAsync(token, {
+            secret: process.env.JWT_REFRESH_TOKEN,
+        });
+        console.log('reach');
         try {
-            const foundUser: any = await this.queryService.findUserByToken(token);
+            const foundUser: any = await this.queryService.findUserById(extractObj.id);
             if (!foundUser || foundUser?.length === 0) throw new Error('token not valid');
             const payload = {
                 id: foundUser[0].id,
                 email: foundUser[0].email,
             };
+            console.log(foundUser[0]);
             const newTokens = await this.generateToken(payload);
+            const { refreshToken } = newTokens;
+            await this.queryService.updateRefreshToken(foundUser[0].id, refreshToken);
+            console.log(newTokens);
             return Responser({
                 statusCode: 200,
                 message: 'new tokens are generated',
@@ -359,7 +367,7 @@ export class AuthService {
                     message: 'Failed to update refresh token',
                     devMessage: err.message || '',
                 },
-                400,
+                401,
             );
         }
     }
@@ -376,7 +384,7 @@ export class AuthService {
         const [accessToken, refreshToken] = await Promise.all([
             this.jwt.signAsync(payload, {
                 secret: process.env.JWT_ACCESS_TOKEN,
-                expiresIn: '1d',
+                expiresIn: '60s',
             }),
 
             this.jwt.signAsync(

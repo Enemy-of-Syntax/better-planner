@@ -73,6 +73,7 @@ model project {
 
   projectOnTeam ProjectOnTeam[]
   board         board[]
+
   @@map("projects")
 }
 
@@ -120,7 +121,7 @@ model member {
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")
 
-  tasks     taskAssignOnMember[]
+  tasks taskAssignOnMember[]
 
   @@map("members")
 }
@@ -155,6 +156,7 @@ model task {
   id            String               @id @default(uuid())
   title         String               @db.String()
   description   String               @db.String()
+  status        TASK_STATUS          @default(ACTIVE)
   boardId       String               @map("board_id") @db.String()
   board         board                @relation(fields: [boardId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   startDate     DateTime             @default(now()) @map("start_date")
@@ -188,12 +190,13 @@ model file {
   path      String   @db.String()
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  taskId    String?  @map("task_id") @db.String()
+  task      task?    @relation(fields: [taskId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   user         user?
   project      project[]
   organization organization[]
   team         team[]
-  task         task[]
 
   @@map("files")
 }
@@ -208,6 +211,11 @@ enum USER_ROLE {
 enum ORGANIZATION_STATUS {
   ACTIVE
   BAN
+}
+
+enum TASK_STATUS {
+  EXPIRED
+  ACTIVE
 }
 
 enum PROJECT_STATUS {

@@ -125,6 +125,7 @@ Table tasks {
   id String [pk]
   title String [not null]
   description String [not null]
+  status TASK_STATUS [not null, default: 'ACTIVE']
   boardId String [not null]
   board boards [not null]
   startDate DateTime [default: `now()`, not null]
@@ -154,11 +155,12 @@ Table files {
   path String [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
+  taskId String
+  task tasks
   user users
   project projects [not null]
   organization organizations [not null]
   team teams [not null]
-  task tasks [not null]
 }
 
 Enum USER_ROLE {
@@ -170,6 +172,11 @@ Enum USER_ROLE {
 Enum ORGANIZATION_STATUS {
   ACTIVE
   BAN
+}
+
+Enum TASK_STATUS {
+  EXPIRED
+  ACTIVE
 }
 
 Enum PROJECT_STATUS {
@@ -241,3 +248,5 @@ Ref: tasks.boardId > boards.id [delete: Cascade]
 Ref: tasks.createdUserId > users.id [delete: Cascade]
 
 Ref: labels.taskId > tasks.id [delete: No Action]
+
+Ref: files.taskId > tasks.id [delete: Set Null]

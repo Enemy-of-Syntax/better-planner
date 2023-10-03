@@ -3,14 +3,17 @@ import { IsNotEmpty } from 'class-validator';
 
 export class boardDto {
     constructor() {
-        (this.name = ''), (this.organizationId = '');
+        (this.name = ''), (this.teamId = ''), (this.project_id = '');
     }
 
     @ApiProperty({ type: 'string' })
     name: string;
 
     @ApiProperty({ type: 'string' })
-    organizationId: string;
+    teamId: string;
+
+    @ApiProperty({ type: 'string' })
+    project_id: string;
 }
 
 export class updateBoardDto {

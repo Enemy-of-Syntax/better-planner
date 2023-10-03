@@ -1,5 +1,4 @@
 import { NestFactory, Reflector } from '@nestjs/core';
-// import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
@@ -35,6 +34,7 @@ async function bootstrap() {
         .build();
     const document = SwaggerModule.createDocument(app, config);
     console.log(new Date());
+    console.log(process.env.TZ);
     SwaggerModule.setup('api', app, document);
     await app.listen(Number(PORT));
 }

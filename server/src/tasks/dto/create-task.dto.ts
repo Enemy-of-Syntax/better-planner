@@ -1,13 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { TASK_STATUS } from '@prisma/client';
+import { Transform } from 'class-transformer';
+import { IsDate } from 'class-validator';
 
 export class CreateTaskDto {
     constructor() {
         (this.title = ''),
             (this.description = ''),
             (this.startDate = new Date()),
+            (this.status = TASK_STATUS.ACTIVE),
             (this.endDate = new Date()),
             (this.boardId = ''),
             (this.createdUserId = '');
+        this.images = [];
     }
 
     @ApiProperty()
@@ -16,14 +21,30 @@ export class CreateTaskDto {
     @ApiProperty()
     description: string;
 
+    @ApiProperty({ enum: TASK_STATUS })
+    status: TASK_STATUS;
+
     @ApiProperty()
     boardId: string;
 
-    @ApiProperty()
+    @ApiProperty({ example: '2022-10-3 14:06' })
+    @IsDate()
+    @Transform(({ value }) => value && new Date(value))
     startDate: Date;
 
-    @ApiProperty()
+    @ApiProperty({ example: '2022-10-7 14:06' })
+    @IsDate()
+    @Transform(({ value }) => value && new Date(value))
     endDate: Date;
+
+    @ApiProperty({
+        type: 'array',
+        items: {
+            type: 'string',
+            format: 'binary',
+        },
+    })
+    images: string[];
 
     @ApiProperty()
     createdUserId: string;

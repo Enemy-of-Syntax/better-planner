@@ -11,45 +11,32 @@ export class BoardSql {
             SELECT 
             public.boards.id,
             public.boards.name AS board_name,
-            public.boards.organization_id AS board_organization_id,
-            public.organizations.name AS board_organization_name,
-            public.organizations."createdUserId" AS created_user_id,
-            public.users.name AS created_user_name,
-            public.organizations.created_at,
-            public.organizations.updated_at
-            
+            public.users.name AS created_user_name
             FROM public.boards
 
-            LEFT JOIN public.organizations ON public.boards.organization_id=public.organizations.id
-            LEFT JOIN public.users ON public.boards."createdUserId"=public.users.id
+            LEFT JOIN public.users ON public.boards.created_user_id=public.users.id
             `);
     }
 
     async getSingleBoard(id: string) {
         return await this.prisma.$queryRaw(
-            Prisma.sql`SELECT 
+            Prisma.sql`
+            SELECT 
             public.boards.id,
             public.boards.name AS board_name,
-            public.boards.organization_id AS board_organization_id,
-            public.organizations.name AS board_organization_name,
-            public.organizations."createdUserId" AS created_user_id,
-            public.users.name AS created_user_name,
-            public.organizations.created_at,
-            public.organizations.updated_at
-            
+            public.users.name AS created_user_name
             FROM public.boards
 
-            LEFT JOIN public.organizations ON public.boards.organization_id=public.organizations.id
-            LEFT JOIN public.users ON public.boards."createdUserId"=public.users.id
+            LEFT JOIN public.users ON public.boards.created_user_id=public.users.id
             WHERE public.boards.id=${id}`,
         );
     }
 
     async createBoard(id: string, dto: boardDto, userId: string) {
         await this.prisma.$executeRaw`INSERT INTO public.boards 
-                               (id,name,organization_id,"createdUserId",created_at,updated_at)
-                               VALUES(${id},${dto.name},${
-            dto.organizationId
+                               (id,name,team_id,project_id,created_user_id,created_at,updated_at)
+                               VALUES(${id},${dto.name},${dto.teamId},${
+            dto.project_id
         },${userId},${new Date()},${new Date()})`;
 
         return this.getSingleBoard(id);
@@ -63,12 +50,8 @@ export class BoardSql {
                                         !dto.name || dto.name === ''
                                             ? existingBoard[0].board_name
                                             : dto.name
-                                    },
-                                        organization_id=${
-                                            !dto.organizationId || dto.organizationId === ''
-                                                ? existingBoard[0].board_organization_id
-                                                : dto.organizationId
-                                        }
+                                    }
+                                       
                                     WHERE id=${id}`;
 
         return this.getSingleBoard(id);

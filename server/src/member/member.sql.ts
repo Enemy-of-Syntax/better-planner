@@ -73,7 +73,6 @@ export class memberQuery {
     ) {
         const team = await this.teamsql.findSingleTeam(teamId);
         const userId = team[0].created_user_id;
-        console.log(userId);
         await this.prisma.$executeRaw`INSERT INTO public.members 
                                       (id,team_id,user_id,role,status,created_user_id,created_at,updated_at)
                                       VALUES (${id},${dto.teamId},${

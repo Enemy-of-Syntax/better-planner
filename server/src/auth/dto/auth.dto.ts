@@ -1,4 +1,4 @@
-import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { ApiHeader, ApiProperty, PartialType } from '@nestjs/swagger';
 import { IsEmail, MinLength } from 'class-validator';
 export class registerUserDto {
     constructor() {

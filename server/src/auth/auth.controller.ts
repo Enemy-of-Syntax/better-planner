@@ -16,6 +16,7 @@ import {
     ApiBearerAuth,
     ApiBody,
     ApiConsumes,
+    ApiHeader,
     ApiOperation,
     ApiResponse,
     ApiTags,
@@ -38,6 +39,7 @@ import { CreateMemberDto } from 'src/member/dto/create-member.dto';
 @Controller('auth')
 @ApiTags('auth')
 export class AuthController {
+    // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFiYzFjOWUyLWNjZDUtNDk5My1hZjExLWQzODU1N2QwNmJjNSIsImlhdCI6MTY5NjIyMjk2OSwiZXhwIjoxNjk2ODI3NzY5fQ.IMSeWbpNzEMjDjHukCRmjlg-kxvxXsrPl2xaVE_VCmo
     constructor(private readonly authService: AuthService) {}
 
     @ApiResponse({ status: 200, description: 'user register success' })
@@ -94,9 +96,13 @@ export class AuthController {
     }
 
     @ApiOperation({ summary: 'request refresh token' })
+    @ApiHeader({
+        name: 'Authorization',
+        description: 'Bearer token of authorization',
+    })
     @Get('request-refresh-token')
     requestRefreshToken(@Request() req: IauthRequest) {
-        return this.authService.updateRefreshToken(req);
+        return this.authService.refreshTokenUpdate(req);
     }
 
     @ApiResponse({ status: 200, description: 'token valid' })
