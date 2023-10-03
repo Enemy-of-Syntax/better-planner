@@ -2,6 +2,7 @@ import { PrismaClient, team, user } from '@prisma/client';
 import * as argon from 'argon2';
 const prisma = new PrismaClient();
 
+// ******************Types*******************
 interface User {
     email: string;
     password: string;
@@ -10,8 +11,23 @@ interface Team {
     name: string;
     createdUserId: string;
 }
+interface Board {
+    name: string;
+    teamId: string;
+    projectId: string;
+    createdUserId: string;
+}
+interface Project {
+    name: string;
+    description: string;
+    status: string;
+    createdUserId: string;
+}
+// ******************************************
 
-const users: User[] = [
+// ******************Arrays*******************
+
+const usersArr: User[] = [
     {
         email: 'mohmohaung737@gmail.com',
         password: 'moh12345@',
@@ -29,27 +45,30 @@ const users: User[] = [
         password: 'naing123',
     },
 ];
+const teamsArr: Team[] = [];
+const projectsArr: Project[] = [];
+const boards: Board[] = [];
 
-const teams: Team[] = [
-    {
-        name: 'Backend Team',
-        createdUserId: '8d866faf-3d01-4c58-810a-a7e7b6db832e',
-    },
-    {
-        name: 'Mobile Team',
-        createdUserId: '8d866faf-3d01-4c58-810a-a7e7b6db832e',
-    },
-    {
-        name: 'Frontend Team',
-        createdUserId: '8d866faf-3d01-4c58-810a-a7e7b6db832e',
-    },
-];
+// *******************************************
 
+// *****************Functions******************
 const createUsers = async (user: User | undefined) => {
     return await prisma.user.createMany({
         data: {
             email: user?.email || '',
             password: await argon.hash(user?.password || ''),
+        },
+        skipDuplicates: true,
+    });
+};
+
+const createProjects = async (project: Project | undefined) => {
+    return await prisma.project.createMany({
+        data: {
+            name: project?.name || '',
+            description: project?.description || '',
+            status: 'ACTIVE',
+            createdUserId: project?.createdUserId || '',
         },
         skipDuplicates: true,
     });
@@ -65,17 +84,106 @@ const createTeams = async (team: Team | undefined) => {
     });
 };
 
+const insertTeamArr = async (id: string) => {
+    const sampleArr: Team[] = [
+        {
+            name: 'Backend Team',
+            createdUserId: id,
+        },
+        {
+            name: 'Mobile Team',
+            createdUserId: id,
+        },
+        {
+            name: 'Frontend Team',
+            createdUserId: id,
+        },
+    ];
+
+    sampleArr.map((item) => {
+        return teamsArr.push(item);
+    });
+};
+
+const insertProjectArr = async (id: string) => {
+    const sampleArr: Project[] = [
+        {
+            name: 'The Beast',
+            description: 'This is the beast project',
+            status: 'ACTIVE',
+            createdUserId: id,
+        },
+        {
+            name: 'Alan Sayar',
+            description: 'This is shal project',
+            status: 'ACTIVE',
+            createdUserId: id,
+        },
+        {
+            name: 'Pocket Nicotine',
+            description: 'This is pocket nicotine',
+            status: 'ACTIVE',
+            createdUserId: id,
+        },
+    ];
+
+    sampleArr.map((item) => {
+        return projectsArr.push(item);
+    });
+};
+
+const insertBoardsArr = async (teamId: string, projectId: string, userId: string) => {
+    const sampleArr: Board[] = [
+        {
+            name: 'Backend Board',
+            teamId,
+            projectId,
+            createdUserId: userId,
+        },
+        {
+            name: 'Mobile Board',
+            teamId,
+            projectId,
+            createdUserId: userId,
+        },
+        {
+            name: 'Frontend Board',
+            teamId,
+            projectId,
+            createdUserId: userId,
+        },
+    ];
+
+    sampleArr.map((item) => {
+        return boards.push(item);
+    });
+};
+// ********************************************
+
+// Main Function
 async function main() {
     console.log('start seeding...');
     console.log('creating users...');
 
-    for (let i = 0; i < users.length; i++) {
-        await createUsers(users[i]);
+    for (let i = 0; i < usersArr.length; i++) {
+        await createUsers(usersArr[i]);
     }
 
+    const findusersArr = await prisma.user.findMany();
+    const userId = findusersArr[0]?.id;
+
+    await insertProjectArr((userId && userId) || '');
+
+    console.log('creating projects ...');
+    for (let i = 0; i < projectsArr.length; i++) {
+        await createProjects(projectsArr[i]);
+    }
+
+    await insertTeamArr((userId && userId) || '');
+
     console.log('creating teams...');
-    for (let i = 0; i < teams.length; i++) {
-        await createTeams(teams[i]);
+    for (let i = 0; i < teamsArr.length; i++) {
+        await createTeams(teamsArr[i]);
     }
 
     console.log('seeding finished');
