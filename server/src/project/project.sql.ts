@@ -3,18 +3,20 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { Project } from 'src/@types/SqlReturnType';
+import { ChangeMMTime } from 'libs/UTCtime';
 @Injectable()
 export class projectQuery {
     constructor(private readonly prisma: PrismaService) {}
 
-    async findAllProjects() {
+    async findAllProjects(): Promise<Project[]> {
         return await this.prisma.$queryRaw(Prisma.sql`
         SELECT 
         public.projects.id,
         public.projects.name AS project_name,
         public.projects.description AS project_description,
         public.projects.image_id AS project_image_id,
-        public.files.name AS project_image_name,k
+        public.files.name AS project_image_name,
         public.files.path AS project_image_path,
         public.projects.status AS project_status,
         array_agg(public.boards.id) AS board_ids,
@@ -44,7 +46,7 @@ export class projectQuery {
         `);
     }
 
-    async findSingleProject(id: string) {
+    async findSingleProject(id: string): Promise<Project[]> {
         return await this.prisma.$queryRaw(Prisma.sql`
         SELECT 
         public.projects.id,
@@ -88,23 +90,21 @@ export class projectQuery {
         dto: CreateProjectDto,
         imageId: string | null | undefined,
         createdUserId: string,
-    ) {
+    ): Promise<Project[]> {
         await this.prisma.$executeRaw`INSERT INTO public.projects
                             (id,name,image_id,status,description,created_user_id,created_at,updated_at)
                             VALUES(${projectId},${dto.name},${imageId && imageId},${dto.status},${
             dto.description
-        },${createdUserId},${new Date()},${new Date()})`;
+        },${createdUserId},${await ChangeMMTime()},${await ChangeMMTime()})`;
 
         return await this.findSingleProject(projectId);
     }
 
-    // async findAllProjectsOnOrganization() {
-    //     let result = await this.prisma.$queryRaw(
-    //         Prisma.sql`SELECT * FROM public.projects_on_organizations`,
-    //     );
-    // }
-
-    async updateProject(id: string, dto: UpdateProjectDto, imageId: string | null | undefined) {
+    async updateProject(
+        id: string,
+        dto: UpdateProjectDto,
+        imageId: string | null | undefined,
+    ): Promise<Project[]> {
         const existingProject: any = await this.findSingleProject(id);
 
         await this.prisma.$executeRaw`UPDATE public.projects    
@@ -112,16 +112,16 @@ export class projectQuery {
                                          dto.description === ''
                                              ? existingProject[0].project_description
                                              : dto.description
-                                     }
+                                     },
                                            status=${dto.status},
                                            image_id=${imageId && imageId},
-                                           updated_at=${new Date()}
+                                           updated_at=${await ChangeMMTime()}
                                       WHERE id=${id}`;
 
         return await this.findSingleProject(id);
     }
 
-    async deleteProject(id: string) {
+    async deleteProject(id: string): Promise<number> {
         return await this.prisma.$executeRaw`DELETE FROM public.projects WHERE id=${id}`;
     }
 }

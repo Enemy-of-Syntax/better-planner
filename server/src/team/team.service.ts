@@ -10,7 +10,7 @@ import EmailService from 'libs/mailservice';
 import { INVITATION_STATUS } from '@prisma/client';
 import { invitationTemplate } from 'template/invitation';
 import { JwtService } from '@nestjs/jwt';
-import { Team } from 'src/@types/teamType';
+import { Team } from 'src/@types/SqlReturnType';
 
 @Injectable()
 export class TeamService {

@@ -3,24 +3,20 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { projectQuery } from './project.sql';
 import { v4 as uuidV4 } from 'uuid';
-import { PROJECT_STATUS } from '@prisma/client';
 import { Responser } from 'libs/Responser';
 import { error } from 'console';
 import { imageType } from 'src/@types/imageType';
 import { QueryService } from 'src/auth/auth.sql';
+import { Project } from 'src/@types/SqlReturnType';
 @Injectable()
 export class ProjectService {
     constructor(
         private readonly projectQuery: projectQuery,
         private readonly authsql: QueryService,
     ) {}
-    async create(
-        userId : string,
-        createProjectDto: CreateProjectDto,
-        Image?: Express.Multer.File,
-    ) {
+    async create(userId: string, createProjectDto: CreateProjectDto, Image?: Express.Multer.File) {
         try {
-            const projectId = await uuidV4();
+            const projectId: string = await uuidV4();
             let image: imageType = { id: '', name: '', path: '' };
             if (Image) {
                 image = await this.authsql.insertPhoto({
@@ -29,13 +25,13 @@ export class ProjectService {
                 });
             }
 
-            const newProject = await this.projectQuery.createNewProject(
+            const newProject: Project[] = await this.projectQuery.createNewProject(
                 projectId,
                 createProjectDto,
                 image.id === '' ? null : image.id,
                 userId,
             );
-            if (!newProject) throw error;
+            if (!newProject) throw new Error('failed to create new project');
 
             return Responser({
                 statusCode: 201,
@@ -56,7 +52,7 @@ export class ProjectService {
 
     async findAll() {
         try {
-            const allProjects = await this.projectQuery.findAllProjects();
+            const allProjects: Project[] = await this.projectQuery.findAllProjects();
             if (!allProjects) throw new Error();
 
             return Responser({
@@ -78,7 +74,7 @@ export class ProjectService {
 
     async findOne(id: string) {
         try {
-            const project: any = await this.projectQuery.findSingleProject(id);
+            const project: Project[] = await this.projectQuery.findSingleProject(id);
             if (project.length === 0) throw error;
 
             return Responser({
@@ -98,13 +94,9 @@ export class ProjectService {
         }
     }
 
-    async update(
-        id: string,
-        updateProjectDto: UpdateProjectDto,
-        Image?: Express.Multer.File,
-    ) {
+    async update(id: string, updateProjectDto: UpdateProjectDto, Image?: Express.Multer.File) {
         try {
-            const projectExist: any = await this.projectQuery.findSingleProject(id);
+            const projectExist: Project[] = await this.projectQuery.findSingleProject(id);
             if (projectExist.length === 0) throw new Error('project does not exist');
 
             let image: imageType = { id: '', name: '', path: '' };
@@ -141,10 +133,10 @@ export class ProjectService {
 
     async remove(id: string) {
         try {
-            const projectExist: any = await this.projectQuery.findSingleProject(id);
+            const projectExist: Project[] = await this.projectQuery.findSingleProject(id);
             if (projectExist.length === 0) throw new Error('project not found');
 
-            const deletedProject = await this.projectQuery.deleteProject(id);
+            const deletedProject: number = await this.projectQuery.deleteProject(id);
             if (!deletedProject) throw new Error('failed to delete project');
 
             return Responser({

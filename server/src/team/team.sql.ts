@@ -4,7 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateTeam } from './dto/team.dto';
 import { QueryService } from 'src/auth/auth.sql';
 import { organizationQuery } from 'src/organization/organization.sql';
-import { Team } from 'src/@types/teamType';
+import { Team } from 'src/@types/SqlReturnType';
 import { ChangeMMTime } from 'libs/UTCtime';
 
 @Injectable()
