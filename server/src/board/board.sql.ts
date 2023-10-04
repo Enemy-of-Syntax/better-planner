@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { boardDto } from './dto/board.dto';
+import { ChangeMMTime } from 'libs/UTCtime';
 
 @Injectable()
 export class BoardSql {
@@ -37,7 +38,7 @@ export class BoardSql {
                                (id,name,team_id,project_id,created_user_id,created_at,updated_at)
                                VALUES(${id},${dto.name},${dto.teamId},${
             dto.project_id
-        },${userId},${new Date()},${new Date()})`;
+        },${userId},${await ChangeMMTime()},${await ChangeMMTime()})`;
 
         return this.getSingleBoard(id);
     }
@@ -51,7 +52,7 @@ export class BoardSql {
                                             ? existingBoard[0].board_name
                                             : dto.name
                                     }
-                                       
+                                     updated_at=${await ChangeMMTime()}  
                                     WHERE id=${id}`;
 
         return this.getSingleBoard(id);

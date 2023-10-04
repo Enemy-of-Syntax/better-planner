@@ -1,23 +1,13 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
 import { IsEmail, IsNotEmpty } from 'class-validator';
 
 export class TeamDto {
     constructor() {
         this.name = '';
-        this.memberEmail = '';
-        this.organizationId = '';
     }
 
     @ApiProperty()
     name: string;
-
-    @ApiProperty()
-    @IsEmail()
-    memberEmail: string;
-
-    @ApiProperty()
-    organizationId: string;
 
     @ApiProperty({ type: 'string', format: 'binary', required: false })
     public image?: string[];

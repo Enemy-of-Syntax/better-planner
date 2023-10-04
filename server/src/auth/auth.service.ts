@@ -206,11 +206,11 @@ export class AuthService {
                 devMessage: 'login success',
                 body: { ...tokens },
             });
-        } catch (err) {
+        } catch (err: any) {
             throw new HttpException(
                 {
                     message: 'failed to login!',
-                    devMessage: 'Wrong credentials',
+                    devMessage: err.message || '',
                 },
                 401,
             );
@@ -384,7 +384,7 @@ export class AuthService {
         const [accessToken, refreshToken] = await Promise.all([
             this.jwt.signAsync(payload, {
                 secret: process.env.JWT_ACCESS_TOKEN,
-                expiresIn: '60s',
+                expiresIn: '1d',
             }),
 
             this.jwt.signAsync(

@@ -1,6 +1,6 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { TeamQuery } from './team.sql';
-import { Responser } from 'libs/Responser';
+import { Responser, responseType } from 'libs/Responser';
 import { EmailDto, TeamDto, UpdateTeam } from './dto/team.dto';
 import { v4 as uuidV4 } from 'uuid';
 import { error } from 'console';
@@ -10,6 +10,7 @@ import EmailService from 'libs/mailservice';
 import { INVITATION_STATUS } from '@prisma/client';
 import { invitationTemplate } from 'template/invitation';
 import { JwtService } from '@nestjs/jwt';
+import { Team } from 'src/@types/teamType';
 
 @Injectable()
 export class TeamService {
@@ -22,12 +23,15 @@ export class TeamService {
 
     async getAllTeams() {
         try {
-            const allTeams = await this.teamQuery.findAllTeams();
+            const allTeams: Team[] = await this.teamQuery.findAllTeams();
             return Responser({
                 statusCode: 200,
                 message: 'success to get all teams',
                 devMessage: 'success',
-                body: allTeams,
+                body: {
+                    count: allTeams.length,
+                    data: allTeams,
+                },
             });
         } catch (err: any) {
             throw new HttpException(
@@ -93,11 +97,10 @@ export class TeamService {
                     path: Image.path,
                 });
             }
-            const newTeam = await this.teamQuery.insertNewTeam({
+            const newTeam: Team[] = await this.teamQuery.insertNewTeam({
                 id: uuid,
                 name: dto.name,
                 createdUserId: userId,
-                organizationId: dto.organizationId,
                 imageId: image.id === '' ? null : image.id,
             });
 
@@ -120,20 +123,19 @@ export class TeamService {
 
     async getSingleTeam(id: string) {
         try {
-            const foundTeam = await this.teamQuery.findSingleTeam(id);
+            const foundTeam: Team[] = await this.teamQuery.findSingleTeam(id);
 
             return Responser({
                 statusCode: 200,
-                message: 'success',
+                message: 'successfully fetched team detail',
                 devMessage: 'success',
                 body: foundTeam[0],
             });
-        } catch (err) {
-            console.log(err);
+        } catch (err: any) {
             throw new HttpException(
                 {
                     message: 'failed to fetch team',
-                    devMessage: 'failed to get team from db',
+                    devMessage: err.message || '',
                 },
                 404,
             );
@@ -142,7 +144,7 @@ export class TeamService {
 
     async editTeam(id: string, dto: UpdateTeam, Image?: Express.Multer.File) {
         try {
-            const updateTeamExist = await this.teamQuery.findSingleTeam(id);
+            const updateTeamExist: Team[] = await this.teamQuery.findSingleTeam(id);
             if (!updateTeamExist) throw error;
 
             let image: imageType = { id: '', name: '', path: '' };
@@ -154,18 +156,18 @@ export class TeamService {
                 });
             }
 
-            const updateTeam = await this.teamQuery.updateTeam(
+            const updatedTeam: Team[] = await this.teamQuery.updateTeam(
                 id,
                 dto,
-                image.id === '' ? updateTeamExist[0].team_image_id : image.id,
+                image.id === '' ? updateTeamExist[0]?.team_image_id : image.id,
             );
-            if (!updateTeam) throw error;
+            if (!updatedTeam) throw new Error('Failed to update team');
 
             return Responser({
                 statusCode: 200,
                 message: 'Successfully updated team',
                 devMessage: 'success',
-                body: updateTeam,
+                body: updatedTeam,
             });
         } catch (err: any) {
             console.log(err);
@@ -181,7 +183,7 @@ export class TeamService {
 
     async removeTeam(id: string) {
         try {
-            const deletedTeam = await this.teamQuery.deleteTeam(id);
+            const deletedTeam: number = await this.teamQuery.deleteTeam(id);
             if (!deletedTeam) throw error;
 
             return Responser({
@@ -190,12 +192,12 @@ export class TeamService {
                 devMessage: 'successfully deleted',
                 body: deletedTeam,
             });
-        } catch (err) {
+        } catch (err: any) {
             console.log(err);
             throw new HttpException(
                 {
                     message: 'Failed to delete team',
-                    devMessage: 'failed to delete team',
+                    devMessage: err.message || '',
                 },
                 400,
             );

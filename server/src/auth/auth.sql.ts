@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, user, file, USER_ROLE, INVITATION_STATUS } from '@prisma/client';
+import { ChangeMMTime } from 'libs/UTCtime';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { v4 as uuidV4 } from 'uuid';
 @Injectable()
@@ -82,11 +83,11 @@ export class QueryService {
     }
 
     async insertNewUser({ id, email, imageId, name, password }) {
-        const newDate = new Date();
+        const todayDate = await ChangeMMTime();
         await this.prisma
             .$executeRaw`INSERT INTO public.users ( id,email,name,password,image_id,created_at,updated_at) VALUES (${id},${email},${name},${password},${
             imageId && imageId
-        },${newDate},${newDate})`;
+        },${todayDate},${todayDate})`;
 
         let userArr = await this.findUserByEmail(email);
         return userArr[0];
@@ -94,9 +95,10 @@ export class QueryService {
 
     async insertPhoto({ name, path }) {
         const id: string = await uuidV4();
+        const todayDate = await ChangeMMTime();
         await this.prisma.$executeRaw`INSERT INTO public.files
                 (id,name,path,created_at,updated_at)
-                VALUES(${id},${name},${path},${new Date()},${new Date()})`;
+                VALUES(${id},${name},${path},${todayDate},${todayDate})`;
 
         let imageArr: file[] = await this.prisma.$queryRaw(
             Prisma.sql`SELECT * FROM public.files WHERE id=${id}`,
@@ -108,11 +110,12 @@ export class QueryService {
     }
 
     async updateUser({ id, email, imageId, name, password }) {
+        const todayDate = await ChangeMMTime();
         await this.prisma.$executeRaw`UPDATE public.users 
                                 SET email=${email},
                                     name=${name},
                                     password=${password},
-                                    updated_at=${new Date()},
+                                    updated_at=${todayDate},
                                     image_id=${imageId && imageId}
                                 WHERE id=${id}
                                     `;
@@ -121,43 +124,51 @@ export class QueryService {
     }
 
     async updateUserStatus(status: INVITATION_STATUS, email: string) {
+        const todayDate = await ChangeMMTime();
         console.log(status, email);
         await this.prisma.$executeRaw`UPDATE public.users 
-                                       SET status=${status}
+                                       SET status=${status},
+                                          updated_at = ${todayDate}
                                        WHERE email=${email}
+
                                        `;
         return await this.findUserByEmail(email);
     }
 
     async updateUserRecoveryCode(code: number | null, email: string) {
+        const todayDate = await ChangeMMTime();
         return await this.prisma.$executeRaw`UPDATE public.users
                                               SET recovery_code=${code && code},
-                                                  code_valid_time=${new Date()}
+                                                  code_valid_time=${todayDate}
                                               WHERE email=${email}
                                               `;
     }
 
     async updateUserRole(userId: string) {
+        const todayDate = await ChangeMMTime();
         return await this.prisma.$executeRaw`UPDATE public.users   
                                       SET role=${USER_ROLE.ADMIN},
-                                          updated_at=${new Date()}
+                                          updated_at=${todayDate}
                                           WHERE public.users.id=${userId}
                                       `;
     }
 
     async updateUserPassword(email: string, password: string) {
+        const todayDate = await ChangeMMTime();
         await this.prisma.$executeRaw`UPDATE public.users 
                                             SET password=${password}
+                                            updated_at = ${todayDate}
                                             WHERE email=${email}
 
         `;
         return await this.findUserByEmail(email);
     }
 
-    async updateRefreshToken(id: string, token) {
-        console.log(token);
+    async updateRefreshToken(id: string, token: string) {
+        const todayDate = await ChangeMMTime();
         return await this.prisma.$executeRaw`UPDATE public.users
-                                        SET refresh_token=${token}
+                                        SET refresh_token=${token},
+                                         updated_at = ${todayDate}
                                         WHERE id=${id}`;
     }
 }
