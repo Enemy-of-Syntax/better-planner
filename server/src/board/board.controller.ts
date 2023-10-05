@@ -12,7 +12,7 @@ import {
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { BoardService } from './board.service';
 import { boardDto } from './dto/board.dto';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { AuthGuard } from 'src/guards/auth.guard';
 import { IauthRequest } from 'src/@types/authRequest';
 
 @Controller('board')
@@ -25,7 +25,7 @@ export class BoardController {
     @ApiResponse({ status: 404, description: 'not found' })
     @ApiResponse({ status: 401, description: 'bad request' })
     @ApiResponse({ status: 500, description: 'internal server error' })
-    @Get('get-all')
+    @Get('all')
     GetAll() {
         return this.boardService.getAllBoards();
     }

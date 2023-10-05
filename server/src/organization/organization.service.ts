@@ -72,8 +72,8 @@ export class OrganizationService {
         try {
             const id: string = await uuidV4();
 
-            const updateUserRole: any = await this.authQuery.updateUserRole(userId);
-            if (!updateUserRole) throw new Error('failed to update user role');
+            // const updateUserRole: any = await this.authQuery.updateUserRole(userId);
+            // if (!updateUserRole) throw new Error('failed to update user role');
 
             let image: imageType = { id: '', name: '', path: '' };
             if (Image) {

@@ -1,4 +1,5 @@
 import { ApiHeader, ApiProperty, PartialType } from '@nestjs/swagger';
+import { USER_ROLE } from '@prisma/client';
 import { IsEmail, MinLength } from 'class-validator';
 export class registerUserDto {
     constructor() {
@@ -70,4 +71,17 @@ export class verifyOTPcode {
 
     @ApiProperty()
     code: string;
+}
+
+export class updateRoleDto {
+    constructor() {
+        this.role = USER_ROLE.ADMIN;
+        this.updatedUserId = '';
+    }
+
+    @ApiProperty({ enum: USER_ROLE, default: USER_ROLE.MEMBER })
+    role: USER_ROLE;
+
+    @ApiProperty({ type: 'string' })
+    updatedUserId: string;
 }

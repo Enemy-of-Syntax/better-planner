@@ -9,13 +9,41 @@ export class BoardSql {
     constructor(private readonly prisma: PrismaService) {}
     async getAllBoards() {
         return await this.prisma.$queryRaw(Prisma.sql`
-            SELECT 
-            public.boards.id,
-            public.boards.name AS board_name,
-            public.users.name AS created_user_name
-            FROM public.boards
+        SELECT 
+        public.boards.id,
+        public.boards.name AS board_name,
+        public.boards.team_id AS team_id,
+        public.teams.name AS team_name,
+        public.boards.project_id AS project_id,
+        public.projects.name AS project_name,
+        public.users.name AS created_user_name,
+        public.boards.created_user_id,
+        public.boards.created_at,
+        public.boards.updated_at,
 
-            LEFT JOIN public.users ON public.boards.created_user_id=public.users.id
+        (
+            SELECT JSON_AGG(public.tasks.*)
+            FROM public.tasks 
+            WHERE public.tasks.board_id = public.boards.id 
+        ) AS tasks
+
+    FROM public.boards
+
+    LEFT JOIN public.teams ON public.boards.team_id = public.teams.id
+    LEFT JOIN public.users ON public.boards.created_user_id = public.users.id
+    LEFT JOIN public.projects ON public.boards.project_id = public.projects.id
+
+    GROUP BY
+        public.boards.id,
+        public.boards.name,
+        public.boards.team_id,
+        public.teams.name,
+        public.boards.project_id,
+        public.projects.name,
+        public.users.name,
+        public.boards.created_user_id,
+        public.boards.created_at,
+        public.boards.updated_at;
             `);
     }
 
@@ -25,11 +53,40 @@ export class BoardSql {
             SELECT 
             public.boards.id,
             public.boards.name AS board_name,
-            public.users.name AS created_user_name
-            FROM public.boards
-
-            LEFT JOIN public.users ON public.boards.created_user_id=public.users.id
-            WHERE public.boards.id=${id}`,
+            public.boards.team_id AS team_id,
+            public.teams.name AS team_name,
+            public.boards.project_id AS project_id,
+            public.projects.name AS project_name,
+            public.users.name AS created_user_name,
+            public.boards.created_user_id,
+            public.boards.created_at,
+            public.boards.updated_at,
+    
+            (
+                SELECT JSON_AGG(public.tasks.*)
+                FROM public.tasks 
+                WHERE public.tasks.board_id = public.boards.id 
+            ) AS tasks
+    
+        FROM public.boards
+    
+        LEFT JOIN public.teams ON public.boards.team_id = public.teams.id
+        LEFT JOIN public.users ON public.boards.created_user_id = public.users.id
+        LEFT JOIN public.projects ON public.boards.project_id = public.projects.id
+        WHERE public.boards.id=${id}
+    
+        GROUP BY
+            public.boards.id,
+            public.boards.name,
+            public.boards.team_id,
+            public.teams.name,
+            public.boards.project_id,
+            public.projects.name,
+            public.users.name,
+            public.boards.created_user_id,
+            public.boards.created_at,
+            public.boards.updated_at;
+            `,
         );
     }
 
@@ -45,13 +102,12 @@ export class BoardSql {
 
     async updateBoard(id: string, dto: boardDto) {
         const existingBoard: any = await this.getSingleBoard(id);
-        console.log(id, dto);
         await this.prisma.$executeRaw`UPDATE public.boards
                                     SET name=${
                                         !dto.name || dto.name === ''
                                             ? existingBoard[0].board_name
                                             : dto.name
-                                    }
+                                    },
                                      updated_at=${await ChangeMMTime()}  
                                     WHERE id=${id}`;
 

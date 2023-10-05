@@ -24,7 +24,7 @@ import {
     ApiResponse,
     ApiTags,
 } from '@nestjs/swagger';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { AuthGuard } from 'src/guards/auth.guard';
 import { IauthRequest } from 'src/@types/authRequest';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { fileStorage } from 'libs/file-storage';
@@ -54,7 +54,7 @@ export class ProjectController {
     @ApiResponse({ status: 200, description: 'fetched all projects success' })
     @ApiResponse({ status: 404, description: 'not found' })
     @ApiResponse({ status: 500, description: 'internal server error' })
-    @Get('get-all')
+    @Get('all')
     findAll() {
         return this.projectService.findAll();
     }

@@ -17,7 +17,7 @@ import { ApiBearerAuth, ApiConsumes, ApiQuery, ApiResponse, ApiTags } from '@nes
 import { ORGANIZATION_STATUS, organization } from '@prisma/client';
 import { OrganizationService } from './organization.service';
 import { UpdateOrganizationDto, organizationDto } from './dto/organization.dto';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { AuthGuard } from 'src/guards/auth.guard';
 import { IauthRequest } from 'src/@types/authRequest';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { fileStorage } from 'libs/file-storage';
@@ -32,7 +32,7 @@ export class OrganizationController {
     @ApiResponse({ status: 404, description: 'not found' })
     @ApiResponse({ status: 401, description: 'bad request' })
     @ApiResponse({ status: 500, description: 'internal server error' })
-    @Get('get-all')
+    @Get('all')
     GetAll(): Promise<string | organization[]> {
         return this.organizationService.getAllOrganizations();
     }

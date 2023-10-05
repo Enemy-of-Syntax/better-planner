@@ -4,6 +4,7 @@ import {
     Get,
     Header,
     Param,
+    Patch,
     Post,
     Put,
     Req,
@@ -27,15 +28,19 @@ import {
     registerUserDto,
     resetPwDto,
     updateRefreshTokenDto,
+    updateRoleDto,
     updateUserDto,
     verifyOTPcode,
 } from './dto';
 import { AuthService } from './auth.service';
 import { IauthRequest } from 'src/@types/authRequest';
-import { AuthGuard } from './auth.guard';
+import { AuthGuard } from '../guards/auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { fileStorage } from 'libs/file-storage';
 import { CreateMemberDto } from 'src/member/dto/create-member.dto';
+import { Roles } from 'src/decorators/role.decorator';
+import { USER_ROLE } from '@prisma/client';
+import { RolesGuard } from 'src/guards/roles.guard';
 @Controller('auth')
 @ApiTags('auth')
 export class AuthController {
@@ -115,18 +120,28 @@ export class AuthController {
         return this.authService.profile(request.user.id);
     }
 
-    // @ApiResponse({ status: 200, description: 'fetched user list successfully' })
-    // @ApiResponse({ status: 400, description: 'bad request' })
-    // @ApiResponse({ status: 401, description: 'unauthorized' })
-    // @ApiResponse({ status: 404, description: 'not found' })
-    // @ApiResponse({ status: 500, description: 'internal server error' })
-    // @ApiOperation({ summary: 'all users' })
-    // @UseGuards(AuthGuard)
-    // @ApiBearerAuth()
-    // @Get('profile/all')
-    // getAllProfile() {
-    //     return this.authService.allProfile();
-    // }
+    @ApiResponse({ status: 200, description: 'fetched user list successfully' })
+    @ApiResponse({ status: 400, description: 'bad request' })
+    @ApiResponse({ status: 401, description: 'unauthorized' })
+    @ApiResponse({ status: 404, description: 'not found' })
+    @ApiResponse({ status: 500, description: 'internal server error' })
+    @ApiOperation({ summary: 'all users' })
+    @UseGuards(AuthGuard)
+    @ApiBearerAuth()
+    @Get('profile/all')
+    @Roles(USER_ROLE.ADMIN)
+    @UseGuards(AuthGuard, RolesGuard)
+    getAllProfile() {
+        return this.authService.allProfile();
+    }
+
+    @ApiBearerAuth()
+    @Patch('role-update')
+    @UseGuards(AuthGuard, UseGuards)
+    @Roles(USER_ROLE.SUPER_ADMIN)
+    editRole(@Body() role: updateRoleDto) {
+        return this.authService.roleUpdate(role);
+    }
 
     // @ApiResponse({ status: 201, description: 'updated user  successfully' })
     // @ApiResponse({ status: 400, description: 'bad request' })

@@ -14,7 +14,7 @@ import {
 import { TeamService } from './team.service';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { EmailDto, TeamDto, UpdateTeam } from './dto/team.dto';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { AuthGuard } from 'src/guards/auth.guard';
 import { IauthRequest } from 'src/@types/authRequest';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { fileStorage } from 'libs/file-storage';
@@ -26,7 +26,7 @@ import { fileStorage } from 'libs/file-storage';
 export class TeamController {
     constructor(private readonly teamService: TeamService) {}
 
-    @Get('get-all')
+    @Get('all')
     GetAllTeams() {
         return this.teamService.getAllTeams();
     }

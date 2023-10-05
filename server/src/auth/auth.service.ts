@@ -10,6 +10,7 @@ import {
     loginUserDto,
     registerUserDto,
     resetPwDto,
+    updateRoleDto,
     updateUserDto,
     verifyOTPcode,
 } from './dto';
@@ -17,7 +18,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Responser } from 'libs/Responser';
 import { QueryService } from './auth.sql';
 import { v4 as uuidV4 } from 'uuid';
-import { MEMBER_ROLE, MEMBER_STATUS, user } from '@prisma/client';
+import { MEMBER_ROLE, MEMBER_STATUS, USER_ROLE, user } from '@prisma/client';
 import { imageType } from 'src/@types/imageType';
 import * as argon from 'argon2';
 import { MemberService } from 'src/member/member.service';
@@ -196,6 +197,7 @@ export class AuthService {
             const tokens = await this.generateToken({
                 email: foundUser[0].email,
                 id: foundUser[0].id,
+                roles: foundUser[0].role,
             });
 
             await this.queryService.updateRefreshToken(foundUser[0].id, tokens.refreshToken);
@@ -342,13 +344,13 @@ export class AuthService {
         const extractObj = await this.jwt.verifyAsync(token, {
             secret: process.env.JWT_REFRESH_TOKEN,
         });
-        console.log('reach');
         try {
             const foundUser: any = await this.queryService.findUserById(extractObj.id);
             if (!foundUser || foundUser?.length === 0) throw new Error('token not valid');
             const payload = {
                 id: foundUser[0].id,
                 email: foundUser[0].email,
+                roles: foundUser[0].role,
             };
             console.log(foundUser[0]);
             const newTokens = await this.generateToken(payload);
@@ -372,10 +374,36 @@ export class AuthService {
         }
     }
 
-    private async generateToken({ id, email }) {
+    async roleUpdate(dto: updateRoleDto) {
+        console.log(dto.role);
+
+        const userExit = await this.queryService.findUserById(dto.updatedUserId);
+        if (!userExit || userExit.length < 1) throw new NotFoundException('user does not exit');
+
+        try {
+            await this.queryService.updateUserRole(dto.role, dto.updatedUserId);
+            return Responser({
+                statusCode: 201,
+                devMessage: 'user role updated successfully!',
+                message: 'user role updated successfully',
+                body: userExit,
+            });
+        } catch (err: any) {
+            throw new HttpException(
+                {
+                    message: 'Failed to update role',
+                    devMessage: err.message || '',
+                },
+                400,
+            );
+        }
+    }
+
+    private async generateToken({ id, email, roles }) {
         const payload = {
             id,
             email,
+            roles,
         };
 
         if (!payload.email || !payload.id)

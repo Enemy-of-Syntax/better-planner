@@ -17,7 +17,7 @@ import { UpdateMemberDto } from './dto/update-member.dto';
 import { ApiBearerAuth, ApiBody, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { MEMBER_ROLE, MEMBER_STATUS } from '@prisma/client';
 import { IauthRequest } from 'src/@types/authRequest';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { AuthGuard } from 'src/guards/auth.guard';
 
 @Controller('member')
 @ApiTags('member')
@@ -45,7 +45,7 @@ export class MemberController {
     @ApiResponse({ status: 200, description: 'successfully fetched all teams' })
     @ApiResponse({ status: 404, description: 'not found' })
     @ApiResponse({ status: 500, description: 'internal server error' })
-    @Get('get-all')
+    @Get('all')
     findAll() {
         return this.memberService.findAll();
     }
