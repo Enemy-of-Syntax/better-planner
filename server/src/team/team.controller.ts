@@ -12,25 +12,41 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import { TeamService } from './team.service';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { EmailDto, TeamDto, UpdateTeam } from './dto/team.dto';
+import {
+    ApiBearerAuth,
+    ApiBody,
+    ApiConsumes,
+    ApiOperation,
+    ApiResponse,
+    ApiTags,
+} from '@nestjs/swagger';
+import { EmailDto, TeamDto, UpdateTeam, allTeamMemberDto } from './dto/team.dto';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { IauthRequest } from 'src/@types/authRequest';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { fileStorage } from 'libs/file-storage';
+import { CreateMemberDto } from 'src/member/dto/create-member.dto';
+import { QueryService } from 'src/auth/auth.sql';
 
 @Controller('team')
 @ApiTags('team')
 @UseGuards(AuthGuard)
 @ApiBearerAuth()
 export class TeamController {
-    constructor(private readonly teamService: TeamService) {}
+    constructor(
+        private readonly teamService: TeamService,
+        private readonly authService: QueryService,
+    ) {}
 
     @Get('all')
     GetAllTeams() {
         return this.teamService.getAllTeams();
     }
 
+    @Post('member-all')
+    GetTeamMembers(@Body() dto: allTeamMemberDto) {
+        return this.teamService.getAllTeamMembers(dto);
+    }
     @Get('detail/:id')
     GetTeam(@Param('id') id: string) {
         return this.teamService.getSingleTeam(id);
@@ -51,6 +67,12 @@ export class TeamController {
     @Post('member/invite')
     InviteEmail(@Body() email: EmailDto, @Request() req: IauthRequest) {
         return this.teamService.emailInvite(email, req.user.id);
+    }
+
+    @ApiOperation({ summary: 'accept invite' })
+    @Post('member-accept-invite')
+    acceptInvitation(@Request() req, @Body() memberDto: CreateMemberDto) {
+        return this.teamService.acceptInvite(req.headers, memberDto);
     }
 
     @ApiConsumes('multipart/form-data')

@@ -95,12 +95,6 @@ export class AuthController {
         return this.authService.passwordReset(dto);
     }
 
-    @ApiOperation({ summary: 'accept invite' })
-    @Post('accept-invite')
-    acceptInvitation(@Request() req, @Body() memberDto: CreateMemberDto) {
-        return this.authService.acceptInvite(req.headers, memberDto);
-    }
-
     @ApiOperation({ summary: 'request refresh token' })
     @ApiHeader({
         name: 'Authorization',

@@ -1,19 +1,23 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { TeamQuery } from './team.sql';
 import { Responser, responseType } from 'libs/Responser';
-import { EmailDto, TeamDto, UpdateTeam } from './dto/team.dto';
+import { EmailDto, TeamDto, UpdateTeam, allTeamMemberDto } from './dto/team.dto';
 import { v4 as uuidV4 } from 'uuid';
 import { error } from 'console';
 import { imageType } from 'src/@types/imageType';
 import { QueryService } from 'src/auth/auth.sql';
 import EmailService from 'libs/mailservice';
-import { INVITATION_STATUS } from '@prisma/client';
+import { INVITATION_STATUS, MEMBER_ROLE, MEMBER_STATUS } from '@prisma/client';
 import { invitationTemplate } from 'template/invitation';
 import { JwtService } from '@nestjs/jwt';
-import { Team } from 'src/@types/SqlReturnType';
+import { Team, User } from 'src/@types/SqlReturnType';
+import { CreateMemberDto } from 'src/member/dto/create-member.dto';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class TeamService {
+    queryService: any;
+    memberService: any;
     constructor(
         private readonly teamQuery: TeamQuery,
         private readonly authSql: QueryService,
@@ -40,6 +44,59 @@ export class TeamService {
                     devMessage: err.message || '',
                 },
                 404,
+            );
+        }
+    }
+
+    async getAllTeamMembers(teamId: allTeamMemberDto) {
+        try {
+            const allTeamMembers = await this.teamQuery.findTeamMember(teamId);
+            return Responser({
+                statusCode: 200,
+                message: 'successfully fetched team members list',
+                devMessage: 'successfully fetched team members list',
+                body: allTeamMembers,
+            });
+        } catch (err: any) {
+            throw new HttpException(
+                {
+                    message: 'Failed to fetched all members of team',
+                    devMessage: err.message || '',
+                },
+                404,
+            );
+        }
+    }
+    async acceptInvite(token, memberDto: CreateMemberDto) {
+        const extractBearer = token.split(' ');
+        try {
+            const extractToken = await this.Jwt.verifyAsync(extractBearer[1], {
+                secret: process.env.JWT_ACCESS_TOKEN,
+            });
+            const { id, email } = extractToken;
+            const invitedUser: User[] = await this.queryService.findUserById(id);
+
+            if (email === invitedUser[0]?.email) {
+                const createdMember = await this.memberService.create(
+                    memberDto,
+                    MEMBER_STATUS.ACTIVE,
+                    MEMBER_ROLE.MEMBER,
+                    memberDto.teamId,
+                );
+                return Responser({
+                    statusCode: 201,
+                    message: 'new member added to team',
+                    devMessage: 'new member added to team',
+                    body: createdMember,
+                });
+            }
+        } catch (err: any) {
+            throw new HttpException(
+                {
+                    message: 'Failed to invite new member',
+                    devMessage: err.message || '',
+                },
+                400,
             );
         }
     }

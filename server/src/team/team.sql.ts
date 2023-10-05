@@ -1,7 +1,7 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { Prisma, team } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UpdateTeam } from './dto/team.dto';
+import { UpdateTeam, allTeamMemberDto } from './dto/team.dto';
 import { QueryService } from 'src/auth/auth.sql';
 import { organizationQuery } from 'src/organization/organization.sql';
 import { Team } from 'src/@types/SqlReturnType';
@@ -77,6 +77,25 @@ export class TeamQuery {
         public.teams.created_at,
         public.teams.updated_at
         `);
+    }
+
+    async findTeamMember(dto: allTeamMemberDto) {
+        return await this.prisma.$queryRaw(
+            Prisma.sql`
+                SELECT 
+                public.members.id,
+                public.members.user_id,
+                public.users.name AS member_name,
+                public.members.role AS member_role,
+                public.members.status AS member_status,
+                public.members.created_at,
+                public.members.updated_at
+
+                FROM public.members
+                LEFT JOIN public.users ON public.members.user_id = public.users.id
+                WHERE public.members.team_id = ${dto.teamId}
+                `,
+        );
     }
 
     async insertNewTeam({ id, name, createdUserId, imageId }): Promise<Team[]> {

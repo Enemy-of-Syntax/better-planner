@@ -13,6 +13,15 @@ export class TeamDto {
     public image?: string[];
 }
 
+export class allTeamMemberDto {
+    constructor() {
+        this.teamId = '';
+    }
+
+    @ApiProperty({ type: 'string' })
+    teamId: string;
+}
+
 export class UpdateTeam extends PartialType(TeamDto) {}
 
 export class EmailDto {

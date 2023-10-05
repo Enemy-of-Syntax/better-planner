@@ -28,10 +28,14 @@ import { AuthGuard } from 'src/guards/auth.guard';
 import { IauthRequest } from 'src/@types/authRequest';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { fileStorage } from 'libs/file-storage';
+import { RolesGuard } from 'src/guards/roles.guard';
+import { USER_ROLE } from '@prisma/client';
+import { Roles } from 'src/decorators/role.decorator';
 
 @Controller('project')
 @ApiTags('project')
-@UseGuards(AuthGuard)
+@Roles(USER_ROLE.SUPER_ADMIN, USER_ROLE.ADMIN)
+@UseGuards(AuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class ProjectController {
     constructor(private readonly projectService: ProjectService) {}

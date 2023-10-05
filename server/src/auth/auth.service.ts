@@ -25,6 +25,7 @@ import { MemberService } from 'src/member/member.service';
 import { CreateMemberDto } from 'src/member/dto/create-member.dto';
 import EmailService from 'libs/mailservice';
 import { recoverPw } from 'template/recoverPw';
+import { User } from 'src/@types/SqlReturnType';
 
 @Injectable()
 export class AuthService {
@@ -40,7 +41,7 @@ export class AuthService {
         try {
             const LowerCaseDtoEmail = email.toLowerCase();
 
-            const isUserAlrExist: user[] = await this.queryService.findUserByEmail(
+            const isUserAlrExist: User[] = await this.queryService.findUserByEmail(
                 LowerCaseDtoEmail,
             );
             if (isUserAlrExist.length > 0) throw new Error('credentials already taken');
@@ -106,6 +107,7 @@ export class AuthService {
             new Date().getSeconds() < 10 ? `0${new Date().getSeconds()}` : new Date().getSeconds()
         }`;
 
+        //eg- 1568(createdTime)   1588(currentTime)   1668(expireTime)
         if (currentTimeStamp >= createdTimeStamp && currentTimeStamp <= expiredTimeStamp) {
             return Responser({
                 statusCode: 200,
@@ -228,7 +230,7 @@ export class AuthService {
                 secret: process.env.JWT_ACCESS_TOKEN,
             });
             const { id, email } = extractToken;
-            const invitedUser: user[] = await this.queryService.findUserById(id);
+            const invitedUser: User[] = await this.queryService.findUserById(id);
 
             if (email === invitedUser[0]?.email) {
                 const createdMember = await this.memberService.create(
@@ -279,7 +281,7 @@ export class AuthService {
 
     async allProfile() {
         try {
-            const allUsers: user[] = await this.queryService.findAllUsers();
+            const allUsers: User[] = await this.queryService.findAllUsers();
             if (!allUsers) throw new Error();
 
             return Responser({
