@@ -20,6 +20,7 @@ import {
     ApiHeader,
     ApiOperation,
     ApiResponse,
+    ApiResponseProperty,
     ApiTags,
 } from '@nestjs/swagger';
 import {
@@ -136,9 +137,11 @@ export class AuthController {
     }
 
     @ApiBearerAuth()
+    @ApiResponse({ status: 403, description: 'Not allowed by user role ( Forbidden )' })
+    @ApiOperation({ description: 'updated user role by super-admin' })
     @Patch('role-update')
-    @UseGuards(AuthGuard, UseGuards)
-    @Roles(USER_ROLE.SUPER_ADMIN)
+    @UseGuards(AuthGuard, RolesGuard)
+    @Roles(USER_ROLE.SUPER_ADMIN, USER_ROLE.ADMIN)
     editRole(@Body() role: updateRoleDto) {
         return this.authService.roleUpdate(role);
     }

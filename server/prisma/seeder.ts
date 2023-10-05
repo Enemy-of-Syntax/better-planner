@@ -1,5 +1,6 @@
 import { PrismaClient, team, user } from '@prisma/client';
 import * as argon from 'argon2';
+import { ChangeMMTime } from 'libs/UTCtime';
 const prisma = new PrismaClient();
 
 // ******************Types*******************
@@ -57,6 +58,8 @@ const createUsers = async (user: User | undefined) => {
         data: {
             email: user?.email || '',
             password: await argon.hash(user?.password || ''),
+            createdAt: await ChangeMMTime(),
+            updatedAt: await ChangeMMTime(),
         },
         skipDuplicates: true,
     });
@@ -69,6 +72,8 @@ const createProjects = async (project: Project | undefined) => {
             description: project?.description || '',
             status: 'ACTIVE',
             createdUserId: project?.createdUserId || '',
+            createdAt: await ChangeMMTime(),
+            updatedAt: await ChangeMMTime(),
         },
         skipDuplicates: true,
     });
@@ -79,6 +84,8 @@ const createTeams = async (team: Team | undefined) => {
         data: {
             name: team?.name || '',
             createdUserId: team?.createdUserId || '',
+            createdAt: await ChangeMMTime(),
+            updatedAt: await ChangeMMTime(),
         },
         skipDuplicates: true,
     });

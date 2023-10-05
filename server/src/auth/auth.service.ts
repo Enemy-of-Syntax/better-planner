@@ -381,12 +381,14 @@ export class AuthService {
         if (!userExit || userExit.length < 1) throw new NotFoundException('user does not exit');
 
         try {
-            await this.queryService.updateUserRole(dto.role, dto.updatedUserId);
+            const updatedUser = await this.queryService.updateUserRole(dto.role, dto.updatedUserId);
+            if (!updatedUser || updatedUser.length < 1)
+                throw new BadRequestException('failed to update user role');
             return Responser({
                 statusCode: 201,
                 devMessage: 'user role updated successfully!',
                 message: 'user role updated successfully',
-                body: userExit,
+                body: updatedUser,
             });
         } catch (err: any) {
             throw new HttpException(

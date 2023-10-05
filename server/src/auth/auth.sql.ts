@@ -146,11 +146,12 @@ export class QueryService {
 
     async updateUserRole(role: USER_ROLE, userId: string) {
         const todayDate = await ChangeMMTime();
-        return await this.prisma.$executeRaw`UPDATE public.users   
+        await this.prisma.$executeRaw`UPDATE public.users   
                                       SET role=${role},
                                           updated_at=${todayDate}
                                           WHERE public.users.id=${userId}
                                       `;
+        return await this.findUserById(userId);
     }
 
     async updateUserPassword(email: string, password: string) {
