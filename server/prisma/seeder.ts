@@ -1,4 +1,4 @@
-import { PrismaClient, team, user } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import * as argon from 'argon2';
 import { ChangeMMTime } from 'libs/UTCtime';
 const prisma = new PrismaClient();

@@ -1,5 +1,17 @@
-import { PROJECT_STATUS } from '@prisma/client';
+import { INVITATION_STATUS, PROJECT_STATUS, USER_ROLE } from '@prisma/client';
 
+export interface User {
+    id: string;
+    email: string;
+    password: string;
+    status: null | INVITATION_STATUS;
+    role: null | USER_ROLE;
+    image_id: null | string;
+    image_name: null | string;
+    image_path: null | string;
+    created_at: Date;
+    updated_at: Date;
+}
 export interface Team {
     id: string;
     team_name: string;

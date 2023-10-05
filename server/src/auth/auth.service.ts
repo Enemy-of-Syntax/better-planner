@@ -18,7 +18,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Responser } from 'libs/Responser';
 import { QueryService } from './auth.sql';
 import { v4 as uuidV4 } from 'uuid';
-import { MEMBER_ROLE, MEMBER_STATUS, USER_ROLE, user } from '@prisma/client';
+import { MEMBER_ROLE, MEMBER_STATUS, user } from '@prisma/client';
 import { imageType } from 'src/@types/imageType';
 import * as argon from 'argon2';
 import { MemberService } from 'src/member/member.service';
@@ -105,7 +105,7 @@ export class AuthService {
         let currentTimeStamp = `${new Date().getMinutes()}${
             new Date().getSeconds() < 10 ? `0${new Date().getSeconds()}` : new Date().getSeconds()
         }`;
-        console.log(createdTimeStamp, currentTimeStamp, expiredTimeStamp);
+
         if (currentTimeStamp >= createdTimeStamp && currentTimeStamp <= expiredTimeStamp) {
             return Responser({
                 statusCode: 200,
@@ -164,6 +164,7 @@ export class AuthService {
         try {
             const hashPw = await argon.hash(newPassword);
             await this.queryService.updateUserRecoveryCode(null, email);
+
             const updatedUser = await this.queryService.updateUserPassword(email, hashPw);
             if (!updatedUser) throw new Error();
 
@@ -188,6 +189,7 @@ export class AuthService {
         const { email, password } = dto;
         try {
             const lowerCaseDtoEmail = email.toLowerCase();
+
             const foundUser: any = await this.queryService.findUserByEmail(lowerCaseDtoEmail);
             if (!foundUser) throw new UnauthorizedException('Wrong credentials');
 
@@ -197,7 +199,7 @@ export class AuthService {
             const tokens = await this.generateToken({
                 email: foundUser[0].email,
                 id: foundUser[0].id,
-                roles: foundUser[0].role,
+                roles: foundUser[0].role === null ? 'MEMBER' : foundUser[0].role,
             });
 
             await this.queryService.updateRefreshToken(foundUser[0].id, tokens.refreshToken);
@@ -347,16 +349,17 @@ export class AuthService {
         try {
             const foundUser: any = await this.queryService.findUserById(extractObj.id);
             if (!foundUser || foundUser?.length === 0) throw new Error('token not valid');
+
             const payload = {
                 id: foundUser[0].id,
                 email: foundUser[0].email,
                 roles: foundUser[0].role,
             };
-            console.log(foundUser[0]);
+
             const newTokens = await this.generateToken(payload);
             const { refreshToken } = newTokens;
+
             await this.queryService.updateRefreshToken(foundUser[0].id, refreshToken);
-            console.log(newTokens);
             return Responser({
                 statusCode: 200,
                 message: 'new tokens are generated',

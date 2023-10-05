@@ -1,28 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, user, file, USER_ROLE, INVITATION_STATUS } from '@prisma/client';
 import { ChangeMMTime } from 'libs/UTCtime';
+import { User } from 'src/@types/SqlReturnType';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { v4 as uuidV4 } from 'uuid';
 @Injectable()
 export class QueryService {
     constructor(private readonly prisma: PrismaService) {}
 
-    async findUserByEmail(email: string): Promise<user[]> {
+    async findUserByEmail(email: string): Promise<User[]> {
         return await this.prisma.$queryRaw(
             Prisma.sql`
             SELECT 
             public.users.id,
             public.users.email,
+            public.users.password,
             public.users.status,
-            public.users.name AS user_name,
             public.users.role,
-            public.users.recovery_code,
-            public.users.code_valid_time,
-            public.users.refresh_token,
             public.users.image_id,
             public.files.name AS image_name,
-            public.files.path,
-            public.users.password,
+            public.files.path AS image_path,
             public.users.created_at,
             public.users.updated_at
             FROM public.users
@@ -33,21 +30,18 @@ export class QueryService {
         );
     }
 
-    async findAllUsers(): Promise<user[]> {
+    async findAllUsers(): Promise<User[]> {
         return await this.prisma.$queryRaw(
             Prisma.sql`
             SELECT 
             public.users.id,
             public.users.email,
-            public.users.status,
-            public.users.name AS user_name,
-            public.users.role,
-            public.users.recovery_code,
-            public.users.image_id,
-            public.files.name AS image_name,
-            public.files.path,
             public.users.password,
-            public.users.code_valid_time,
+            public.users.status,
+            public.users.role,
+            public.users.image_id AS image_id,
+            public.files.name AS image_name,
+            public.files.path AS image_path,
             public.users.created_at,
             public.users.updated_at
             FROM public.users
@@ -57,21 +51,18 @@ export class QueryService {
         );
     }
 
-    async findUserById(id: string): Promise<user[]> {
+    async findUserById(id: string): Promise<User[]> {
         return await this.prisma.$queryRaw(
             Prisma.sql`
             SELECT 
             public.users.id,
             public.users.email,
-            public.users.status,
-            public.users.name AS user_name,
-            public.users.role,
-            public.users.recovery_code,
-            public.users.image_id,
-            public.files.name AS image_name,
-            public.files.path,
             public.users.password,
-            public.users.code_valid_time,
+            public.users.status,
+            public.users.role,
+            public.users.image_id AS image_id,
+            public.files.name AS image_name,
+            public.files.path AS image_path,
             public.users.created_at,
             public.users.updated_at
             FROM public.users
@@ -82,7 +73,7 @@ export class QueryService {
         );
     }
 
-    async insertNewUser({ id, email, imageId, name, password }) {
+    async insertNewUser({ id, email, imageId, name, password }): Promise<User | undefined> {
         const todayDate = await ChangeMMTime();
         await this.prisma
             .$executeRaw`INSERT INTO public.users ( id,email,name,password,image_id,created_at,updated_at) VALUES (${id},${email},${name},${password},${
@@ -109,7 +100,7 @@ export class QueryService {
         return { id: findImageObj?.id, name: findImageObj?.name, path: findImageObj?.path };
     }
 
-    async updateUser({ id, email, imageId, name, password }) {
+    async updateUser({ id, email, imageId, name, password }): Promise<User | undefined> {
         const todayDate = await ChangeMMTime();
         await this.prisma.$executeRaw`UPDATE public.users 
                                 SET email=${email},
@@ -119,11 +110,11 @@ export class QueryService {
                                     image_id=${imageId && imageId}
                                 WHERE id=${id}
                                     `;
-        let updArr: user[] | undefined = await this.findUserById(id);
+        let updArr: User[] | undefined = await this.findUserById(id);
         return updArr[0];
     }
 
-    async updateUserStatus(status: INVITATION_STATUS, email: string) {
+    async updateUserStatus(status: INVITATION_STATUS, email: string): Promise<User[]> {
         const todayDate = await ChangeMMTime();
         console.log(status, email);
         await this.prisma.$executeRaw`UPDATE public.users 
@@ -135,7 +126,7 @@ export class QueryService {
         return await this.findUserByEmail(email);
     }
 
-    async updateUserRecoveryCode(code: number | null, email: string) {
+    async updateUserRecoveryCode(code: number | null, email: string): Promise<number> {
         const todayDate = await ChangeMMTime();
         return await this.prisma.$executeRaw`UPDATE public.users
                                               SET recovery_code=${code && code},
@@ -144,7 +135,7 @@ export class QueryService {
                                               `;
     }
 
-    async updateUserRole(role: USER_ROLE, userId: string) {
+    async updateUserRole(role: USER_ROLE, userId: string): Promise<User[]> {
         const todayDate = await ChangeMMTime();
         await this.prisma.$executeRaw`UPDATE public.users   
                                       SET role=${role},
@@ -154,10 +145,10 @@ export class QueryService {
         return await this.findUserById(userId);
     }
 
-    async updateUserPassword(email: string, password: string) {
+    async updateUserPassword(email: string, password: string): Promise<User[]> {
         const todayDate = await ChangeMMTime();
         await this.prisma.$executeRaw`UPDATE public.users 
-                                            SET password=${password}
+                                            SET password=${password},:Promise<User[]>
                                             updated_at = ${todayDate}
                                             WHERE email=${email}
 
@@ -165,7 +156,7 @@ export class QueryService {
         return await this.findUserByEmail(email);
     }
 
-    async updateRefreshToken(id: string, token: string) {
+    async updateRefreshToken(id: string, token: string): Promise<number> {
         const todayDate = await ChangeMMTime();
         return await this.prisma.$executeRaw`UPDATE public.users
                                         SET refresh_token=${token},
