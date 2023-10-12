@@ -7,7 +7,7 @@ import { QueryService } from 'src/auth/auth.sql';
 import { organizationQuery } from 'src/organization/organization.sql';
 import { JwtService } from '@nestjs/jwt';
 import EmailService from 'libs/mailservice';
-import { AuthService } from 'src/auth/auth.service';
+import { memberQuery } from 'src/member/member.sql';
 
 @Module({
     controllers: [TeamController],
@@ -18,6 +18,7 @@ import { AuthService } from 'src/auth/auth.service';
         QueryService,
         organizationQuery,
         JwtService,
+        memberQuery,
         EmailService,
     ],
 })

@@ -12,15 +12,15 @@ import { invitationTemplate } from 'template/invitation';
 import { JwtService } from '@nestjs/jwt';
 import { Team, User } from 'src/@types/SqlReturnType';
 import { CreateMemberDto } from 'src/member/dto/create-member.dto';
-import * as jwt from 'jsonwebtoken';
+import { dot } from 'node:test/reporters';
+import { memberQuery } from 'src/member/member.sql';
 
 @Injectable()
 export class TeamService {
-    queryService: any;
-    memberService: any;
     constructor(
         private readonly teamQuery: TeamQuery,
         private readonly authSql: QueryService,
+        private readonly memberSql: memberQuery,
         private readonly Email: EmailService,
         private readonly Jwt: JwtService,
     ) {}
@@ -68,16 +68,19 @@ export class TeamService {
         }
     }
     async acceptInvite(token, memberDto: CreateMemberDto) {
-        const extractBearer = token.split(' ');
+        const extractBearer = token ? token.split(' ') : undefined;
+        if (!extractBearer) throw new Error('wrong token');
         try {
             const extractToken = await this.Jwt.verifyAsync(extractBearer[1], {
                 secret: process.env.JWT_ACCESS_TOKEN,
             });
             const { id, email } = extractToken;
-            const invitedUser: User[] = await this.queryService.findUserById(id);
+            console.log(id, email);
+            const invitedUser: User[] = await this.authSql.findUserById(id);
 
             if (email === invitedUser[0]?.email) {
-                const createdMember = await this.memberService.create(
+                const createdMember = await this.memberSql.createMember(
+                    await uuidV4(),
                     memberDto,
                     MEMBER_STATUS.ACTIVE,
                     MEMBER_ROLE.MEMBER,
@@ -131,7 +134,12 @@ export class TeamService {
                 statusCode: 200,
                 message: 'Invitation email sent successfully!',
                 devMessage: 'Invitation Success!',
-                body: updatedUser,
+                body: {
+                    updatedUser,
+                    invitationToken: process.env.NODE_ENV === 'development' && invitationToken,
+                    userId,
+                    teamId: email.teamId,
+                },
             });
         } catch (err: any) {
             throw new HttpException(

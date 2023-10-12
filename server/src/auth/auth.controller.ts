@@ -2,12 +2,8 @@ import {
     Body,
     Controller,
     Get,
-    Header,
-    Param,
     Patch,
     Post,
-    Put,
-    Req,
     Request,
     UploadedFile,
     UseGuards,
@@ -20,7 +16,6 @@ import {
     ApiHeader,
     ApiOperation,
     ApiResponse,
-    ApiResponseProperty,
     ApiTags,
 } from '@nestjs/swagger';
 import {
@@ -28,9 +23,7 @@ import {
     loginUserDto,
     registerUserDto,
     resetPwDto,
-    updateRefreshTokenDto,
     updateRoleDto,
-    updateUserDto,
     verifyOTPcode,
 } from './dto';
 import { AuthService } from './auth.service';
@@ -38,14 +31,12 @@ import { IauthRequest } from 'src/@types/authRequest';
 import { AuthGuard } from '../guards/auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { fileStorage } from 'libs/file-storage';
-import { CreateMemberDto } from 'src/member/dto/create-member.dto';
 import { Roles } from 'src/decorators/role.decorator';
 import { USER_ROLE } from '@prisma/client';
 import { RolesGuard } from 'src/guards/roles.guard';
 @Controller('auth')
 @ApiTags('auth')
 export class AuthController {
-    // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFiYzFjOWUyLWNjZDUtNDk5My1hZjExLWQzODU1N2QwNmJjNSIsImlhdCI6MTY5NjIyMjk2OSwiZXhwIjoxNjk2ODI3NzY5fQ.IMSeWbpNzEMjDjHukCRmjlg-kxvxXsrPl2xaVE_VCmo
     constructor(private readonly authService: AuthService) {}
 
     @ApiResponse({ status: 200, description: 'user register success' })

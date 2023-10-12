@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { ChangeMMTime } from 'libs/UTCtime';
 import { PrismaService } from 'src/prisma/prisma.service';
-
+import { v4 as uuidV4 } from 'uuid';
 @Injectable()
 export class TaskSqlService {
     constructor(private prisma: PrismaService) {}
@@ -98,11 +98,32 @@ export class TaskSqlService {
         createdUserId,
     }) {
         const localTime = await ChangeMMTime();
-        console.log(localTime);
-        await this.prisma.$executeRaw`INSERT INTO public.tasks 
-                                      (id,title,description,status,board_id,start_date,due_date,created_user_id,created_at,updated_at)
-                                      VALUES (${id},${title},${description},${status},${boardId},${startDate},${dueDate},${createdUserId},${localTime},${localTime})
-                                      `;
+
+        await this.prisma.$executeRaw`
+        INSERT INTO public.tasks 
+        (id,title,description,status,board_id,start_date,due_date,created_user_id,created_at,updated_at)
+        VALUES 
+        (${id},${title},${description},${status},${boardId},${startDate},${dueDate},${createdUserId},${localTime},${localTime})
+        `;
         return await this.findSingleTask(id);
+    }
+
+    async addMembersOnTask(membersArr: string[], taskId: string) {
+        for (let i = 0; i < membersArr.length; i++) {
+            const id = await uuidV4();
+            await this.prisma.$executeRaw`
+            INSERT INTO public.taskAssignOnMember
+            (id ,member_id ,task_id ,created_at ,updated_at )
+            VALUES
+            (${id},${membersArr[i]},${taskId},${await ChangeMMTime()},${await ChangeMMTime()})
+            `;
+        }
+    }
+
+    async updateTaskDateTime(updDate: Date) {
+        await this.prisma.$executeRaw`UPDATE public.tasks   
+                                      SET 
+        
+        `;
     }
 }

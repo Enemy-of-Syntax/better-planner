@@ -16,6 +16,7 @@ import {
     ApiBearerAuth,
     ApiBody,
     ApiConsumes,
+    ApiHeader,
     ApiOperation,
     ApiResponse,
     ApiTags,
@@ -71,8 +72,12 @@ export class TeamController {
 
     @ApiOperation({ summary: 'accept invite' })
     @Post('member-accept-invite')
+    @ApiHeader({
+        name: 'Authorization',
+        description: 'Access token(take from email-invite route)',
+    })
     acceptInvitation(@Request() req, @Body() memberDto: CreateMemberDto) {
-        return this.teamService.acceptInvite(req.headers, memberDto);
+        return this.teamService.acceptInvite(req.headers?.authorization, memberDto);
     }
 
     @ApiConsumes('multipart/form-data')

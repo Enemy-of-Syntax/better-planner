@@ -26,6 +26,7 @@ import { CreateMemberDto } from 'src/member/dto/create-member.dto';
 import EmailService from 'libs/mailservice';
 import { recoverPw } from 'template/recoverPw';
 import { User } from 'src/@types/SqlReturnType';
+import * as moment from 'moment';
 
 @Injectable()
 export class AuthService {
@@ -219,40 +220,6 @@ export class AuthService {
                     devMessage: err.message || '',
                 },
                 401,
-            );
-        }
-    }
-
-    async acceptInvite(token, memberDto: CreateMemberDto) {
-        const extractBearer = token.split(' ');
-        try {
-            const extractToken = await this.jwt.verifyAsync(extractBearer[1], {
-                secret: process.env.JWT_ACCESS_TOKEN,
-            });
-            const { id, email } = extractToken;
-            const invitedUser: User[] = await this.queryService.findUserById(id);
-
-            if (email === invitedUser[0]?.email) {
-                const createdMember = await this.memberService.create(
-                    memberDto,
-                    MEMBER_STATUS.ACTIVE,
-                    MEMBER_ROLE.MEMBER,
-                    memberDto.teamId,
-                );
-                return Responser({
-                    statusCode: 201,
-                    message: 'new member added to team',
-                    devMessage: 'new member added to team',
-                    body: createdMember,
-                });
-            }
-        } catch (err: any) {
-            throw new HttpException(
-                {
-                    message: 'Failed to invite new member',
-                    devMessage: err.message || '',
-                },
-                400,
             );
         }
     }

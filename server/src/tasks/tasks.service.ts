@@ -1,11 +1,12 @@
 import { HttpException, Injectable } from '@nestjs/common';
-import { CreateTaskDto } from './dto/create-task.dto';
+import { CreateTaskDto, allTasksSingleBoardDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskSqlService } from './tasks.sql';
 import { v4 as uuidV4 } from 'uuid';
 import { Responser } from 'libs/Responser';
 import { QueryService } from 'src/auth/auth.sql';
 import { ChangeMMTime } from 'libs/UTCtime';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 interface Image {
     id: string;
@@ -37,6 +38,8 @@ export class TasksService {
                     });
             }
 
+            await this.taskSql.addMembersOnTask(dto.membersId, newTask.id);
+
             return Responser({
                 statusCode: 200,
                 message: 'new task created successfully!',
@@ -54,16 +57,44 @@ export class TasksService {
         }
     }
 
-    findAll() {
-        return `This action returns all tasks`;
+    async findAll(dto: allTasksSingleBoardDto) {
+        try {
+            const allTasksSingleBoard = await this.taskSql.findAllTasksByBoardId(dto.boardId);
+            return Responser({
+                statusCode: 200,
+                message: 'successfully fetched tasks list',
+                devMessage: 'successfully fetched tasks list',
+                body: allTasksSingleBoard,
+            });
+        } catch (error: any) {
+            throw new HttpException(
+                {
+                    message: 'Failed to fetched tasks list',
+                    devMessage: error.message || '',
+                },
+                404,
+            );
+        }
     }
 
     findOne(id: number) {
         return `This action returns a #${id} task`;
     }
 
-    update(id: number, updateTaskDto: UpdateTaskDto) {
-        return `This action updates a #${id} task`;
+    @Cron(CronExpression.EVERY_12_HOURS)
+    update(id: string, updateTaskDto: UpdateTaskDto) {
+        const {} = updateTaskDto;
+
+        try {
+        } catch (err: any) {
+            throw new HttpException(
+                {
+                    message: 'Failed to update date',
+                    devMessage: err.message || '',
+                },
+                400,
+            );
+        }
     }
 
     remove(id: number) {

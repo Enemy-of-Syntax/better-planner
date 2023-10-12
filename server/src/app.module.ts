@@ -14,7 +14,7 @@ import { ProjectModule } from './project/project.module';
 import { BoardModule } from './board/board.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { TasksModule } from './tasks/tasks.module';
-
+import { ScheduleModule } from '@nestjs/schedule';
 @Module({
     imports: [
         AuthModule,
@@ -25,6 +25,7 @@ import { TasksModule } from './tasks/tasks.module';
         MulterModule.register({
             dest: './uploads',
         }),
+        ScheduleModule.forRoot(),
         TeamModule,
         OrganizationModule,
         MemberModule,

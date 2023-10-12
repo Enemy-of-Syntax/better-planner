@@ -8,12 +8,13 @@ import {
     Delete,
     UseInterceptors,
     UploadedFiles,
+    Put,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
-import { CreateTaskDto } from './dto/create-task.dto';
+import { CreateTaskDto, allTasksSingleBoardDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { fileStorage } from 'libs/file-storage';
 
 @Controller('tasks')
@@ -33,9 +34,9 @@ export class TasksController {
         return this.tasksService.create(createTaskDto, images);
     }
 
-    @Get()
-    findAllTasksByBoardId() {
-        return this.tasksService.findAll();
+    @Get('all')
+    findAllTasksByBoardId(@Body() dto: allTasksSingleBoardDto) {
+        return this.tasksService.findAll(dto);
     }
 
     @Get(':id')
@@ -43,9 +44,9 @@ export class TasksController {
         return this.tasksService.findOne(+id);
     }
 
-    @Patch(':id')
+    @Put(':id')
     update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto) {
-        return this.tasksService.update(+id, updateTaskDto);
+        return this.tasksService.update(id, updateTaskDto);
     }
 
     @Delete(':id')

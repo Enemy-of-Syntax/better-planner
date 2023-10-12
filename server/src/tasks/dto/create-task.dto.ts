@@ -13,6 +13,7 @@ export class CreateTaskDto {
             (this.boardId = ''),
             (this.createdUserId = '');
         this.images = [];
+        this.membersId = [];
     }
 
     @ApiProperty()
@@ -46,6 +47,24 @@ export class CreateTaskDto {
     })
     images: string[];
 
+    @ApiProperty({
+        type: 'array',
+        items: {
+            type: 'string',
+            format: 'binary',
+        },
+    })
+    membersId: string[];
+
     @ApiProperty()
     createdUserId: string;
+}
+
+export class allTasksSingleBoardDto {
+    constructor() {
+        this.boardId = '';
+    }
+
+    @ApiProperty()
+    boardId: string;
 }
