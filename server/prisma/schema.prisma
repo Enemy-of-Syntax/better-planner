@@ -114,7 +114,6 @@ model member {
   team          team?         @relation(fields: [teamId], references: [id])
   userId        String        @map("user_id")
   user          user          @relation("member", fields: [userId], references: [id])
-  role          MEMBER_ROLE   @default(MEMBER)
   status        MEMBER_STATUS @default(ACTIVE)
   createdUserId String        @map("created_user_id")
   createdBy     user          @relation("admin", fields: [createdUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)

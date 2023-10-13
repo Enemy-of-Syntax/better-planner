@@ -18,22 +18,17 @@ import { JwtService } from '@nestjs/jwt';
 import { Responser } from 'libs/Responser';
 import { QueryService } from './auth.sql';
 import { v4 as uuidV4 } from 'uuid';
-import { MEMBER_ROLE, MEMBER_STATUS, user } from '@prisma/client';
 import { imageType } from 'src/@types/imageType';
 import * as argon from 'argon2';
-import { MemberService } from 'src/member/member.service';
-import { CreateMemberDto } from 'src/member/dto/create-member.dto';
 import EmailService from 'libs/mailservice';
 import { recoverPw } from 'template/recoverPw';
 import { User } from 'src/@types/SqlReturnType';
-import * as moment from 'moment';
 
 @Injectable()
 export class AuthService {
     constructor(
         private readonly jwt: JwtService,
         private queryService: QueryService,
-        private readonly memberService: MemberService,
         private readonly Email: EmailService,
     ) {}
 

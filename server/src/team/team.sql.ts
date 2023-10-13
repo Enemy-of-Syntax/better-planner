@@ -52,11 +52,34 @@ export class TeamQuery {
         public.teams.image_id AS team_image_id,
         public.files.name AS team_image_name,
         public.files.path AS team_image_path,
-        array_agg(public.members.id) AS member_ids,
         public.teams.created_user_id AS created_user_id,
         public.users.email AS created_user_email,
         public.teams.created_at,
-        public.teams.updated_at
+        public.teams.updated_at,
+
+        (
+            SELECT JSON_AGG(
+                m.id,
+                u2.id AS user_id,
+                u2.email AS member_email,
+                m.status AS member_status,
+                m.team_id AS member_team_id,
+                public.teams.name AS member_team_name,
+                u1.name AS created_user_name,
+                m.created_at,
+                m.updated_at)
+
+                FROM
+                public.members m
+            LEFT JOIN
+                public.users u1 ON m.created_user_id = u1.id
+            LEFT JOIN
+                public.users u2 ON m.user_id = u2.id
+            LEFT JOIN
+                public.teams ON m.team_id=public.teams.id
+
+            WHERE public.members.team_id = public.teams.id
+        ) AS members
 
         FROM public.teams
 
@@ -80,22 +103,29 @@ export class TeamQuery {
     }
 
     async findTeamMember(dto: allTeamMemberDto) {
-        return await this.prisma.$queryRaw(
-            Prisma.sql`
-                SELECT 
-                public.members.id,
-                public.members.user_id,
-                public.users.name AS member_name,
-                public.members.role AS member_role,
-                public.members.status AS member_status,
-                public.members.created_at,
-                public.members.updated_at
+        return await this.prisma.$queryRaw(Prisma.sql`
+        SELECT
+        m.id,
+        u2.id AS user_id,
+        u2.email AS member_email,
+        m.status AS member_status,
+        m.team_id AS member_team_id,
+        public.teams.name AS member_team_name,
+        u1.name AS created_user_name,
+        m.created_at,
+        m.updated_at
+    FROM
+        public.members m
+    LEFT JOIN
+        public.users u1 ON m.created_user_id = u1.id
+    LEFT JOIN
+        public.users u2 ON m.user_id = u2.id
+    LEFT JOIN
+        public.teams ON m.team_id=public.teams.id
+    
+    WHERE m.team_id =${dto.teamId}
 
-                FROM public.members
-                LEFT JOIN public.users ON public.members.user_id = public.users.id
-                WHERE public.members.team_id = ${dto.teamId}
-                `,
-        );
+            `);
     }
 
     async insertNewTeam({ id, name, createdUserId, imageId }): Promise<Team[]> {

@@ -4,7 +4,6 @@ import { AuthService } from './auth.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { QueryService } from './auth.sql';
-import { MemberService } from 'src/member/member.service';
 import { memberQuery } from 'src/member/member.sql';
 import { TeamQuery } from 'src/team/team.sql';
 import { organizationQuery } from 'src/organization/organization.sql';
@@ -18,7 +17,6 @@ import EmailService from 'libs/mailservice';
         JwtService,
         QueryService,
         memberQuery,
-        MemberService,
         TeamQuery,
         organizationQuery,
         EmailService,

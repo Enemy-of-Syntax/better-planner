@@ -88,7 +88,6 @@ Table members {
   team teams
   userId String [not null]
   user users [not null]
-  role MEMBER_ROLE [not null, default: 'MEMBER']
   status MEMBER_STATUS [not null, default: 'ACTIVE']
   createdUserId String [not null]
   createdBy users [not null]

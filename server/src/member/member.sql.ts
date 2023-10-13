@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { MEMBER_STATUS, MEMBER_ROLE, Prisma } from '@prisma/client';
+import { MEMBER_STATUS, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
@@ -15,7 +15,7 @@ export class memberQuery {
         m.id,
         u2.id AS user_id,
         u2.name AS member_name,
-        m.role  AS member_role,
+        m.email AS member_email,
         m.status AS member_status,
         m.team_id AS member_team_id,
         public.teams.name AS member_team_name,
@@ -39,7 +39,6 @@ export class memberQuery {
         m.id,
         u2.name AS member_name,
         u1.id AS user_id,
-        m.role  AS member_role,
         m.status AS member_status,
         m.team_id AS member_team_id,
         public.teams.name AS member_team_name,
@@ -64,25 +63,19 @@ export class memberQuery {
         );
     }
 
-    async createMember(
-        id: string,
-        dto: CreateMemberDto,
-        status: MEMBER_STATUS,
-        role: MEMBER_ROLE,
-        teamId: string,
-    ) {
+    async createMember(id: string, dto: CreateMemberDto, status: MEMBER_STATUS, teamId: string) {
         const team = await this.teamsql.findSingleTeam(teamId);
         const userId = team[0]?.created_user_id;
         await this.prisma.$executeRaw`INSERT INTO public.members 
-                                      (id,team_id,user_id,role,status,created_user_id,created_at,updated_at)
+                                      (id,team_id,user_id,status,created_user_id,created_at,updated_at)
                                       VALUES (${id},${dto.teamId},${
             dto.userId
-        },${role},${status},${userId},${new Date()},${new Date()})`;
+        },${status},${userId},${new Date()},${new Date()})`;
 
         return await this.getSingleMember(id);
     }
 
-    async updateMember(id: string, dto: UpdateMemberDto, status: MEMBER_STATUS, role: MEMBER_ROLE) {
+    async updateMember(id: string, dto: UpdateMemberDto, status: MEMBER_STATUS) {
         const existingMember: any = await this.getSingleMember(id);
         await this.prisma.$executeRaw`UPDATE public.members 
                                              SET team_id=${
@@ -95,7 +88,7 @@ export class memberQuery {
                                                           ? existingMember[0].user_id
                                                           : dto.userId
                                                   },
-                                                  role=${role},
+                                                 
                                                   status=${status}
                                     WHERE id = ${id}
                                     `;
