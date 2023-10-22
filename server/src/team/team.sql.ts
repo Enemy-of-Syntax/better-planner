@@ -46,7 +46,7 @@ export class TeamQuery {
 
     async findSingleTeam(id: string): Promise<Team[]> {
         return this.prisma.$queryRaw(Prisma.sql`
-        SELECT 
+        SELECT
         public.teams.id,
         public.teams.name AS team_name,
         public.teams.image_id AS team_image_id,
@@ -56,49 +56,32 @@ export class TeamQuery {
         public.users.email AS created_user_email,
         public.teams.created_at,
         public.teams.updated_at,
-
         (
-            SELECT JSON_AGG(
-                m.id,
-                u2.id AS user_id,
-                u2.email AS member_email,
-                m.status AS member_status,
-                m.team_id AS member_team_id,
-                public.teams.name AS member_team_name,
-                u1.name AS created_user_name,
-                m.created_at,
-                m.updated_at)
-
-                FROM
-                public.members m
-            LEFT JOIN
-                public.users u1 ON m.created_user_id = u1.id
-            LEFT JOIN
-                public.users u2 ON m.user_id = u2.id
-            LEFT JOIN
-                public.teams ON m.team_id=public.teams.id
-
-            WHERE public.members.team_id = public.teams.id
+            SELECT JSON_AGG(json_build_object(
+                'id', m.id,
+                'user_id', u2.id,
+                'member_email', u2.email,
+                'member_status', m.status,
+                'member_team_id', m.team_id,
+                'member_team_name', public.teams.name,
+                'created_user_name', u1.name,
+                'created_at', m.created_at,
+                'updated_at', m.updated_at
+            ))
+            FROM public.members m
+            LEFT JOIN public.users u1 ON m.created_user_id = u1.id
+            LEFT JOIN public.users u2 ON m.user_id = u2.id
+            WHERE m.team_id = public.teams.id
+            GROUP BY m.team_id
         ) AS members
 
-        FROM public.teams
+         FROM public.teams
 
-        LEFT JOIN public.files ON public.teams.image_id = public.files.id
-        LEFT JOIN public.users ON public.teams.created_user_id=public.users.id
-        LEFT JOIN public.members ON public.teams.id=public.members.team_id
-
-        WHERE public.teams.id=${id}
-
-        GROUP BY
-        public.teams.id,
-        public.teams.name ,
-        public.teams.image_id ,
-        public.files.name,
-        public.files.path,
-        public.teams.created_user_id,
-        public.users.email,
-        public.teams.created_at,
-        public.teams.updated_at
+         LEFT JOIN public.files ON public.teams.image_id = public.files.id
+         LEFT JOIN public.users ON public.teams.created_user_id = public.users.id
+         
+         WHERE public.teams.id = ${id};
+    
         `);
     }
 

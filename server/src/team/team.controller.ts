@@ -80,7 +80,7 @@ export class TeamController {
         return this.teamService.acceptInvite(req.headers?.authorization, memberDto);
     }
 
-    @Patch('members-remove')
+    @Patch('members-remove/:teamId')
     @ApiBody({ type: removeMembersDto, description: 'remove member' })
     RemoveMembers(@Param() teamId: string, @Body() dto: removeMembersDto) {
         return this.teamService.removeMembers(teamId, dto);

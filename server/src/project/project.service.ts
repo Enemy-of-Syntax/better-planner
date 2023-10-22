@@ -97,7 +97,17 @@ export class ProjectService {
     async update(id: string, updateProjectDto: UpdateProjectDto, Image?: Express.Multer.File) {
         try {
             const projectExist: Project[] = await this.projectQuery.findSingleProject(id);
-            if (projectExist.length === 0) throw new Error('project does not exist');
+
+            if (projectExist.length === 0) {
+                console.log(projectExist);
+                throw new HttpException(
+                    {
+                        message: 'project not found',
+                        devMessage: 'project not found',
+                    },
+                    404,
+                );
+            }
 
             let image: imageType = { id: '', name: '', path: '' };
             if (Image) {
@@ -115,9 +125,9 @@ export class ProjectService {
             if (!updatedProject) throw error;
 
             return Responser({
-                statusCode: 200,
-                message: 'successfully fetched all projects',
-                devMessage: 'successfully fetched all projects',
+                statusCode: 201,
+                message: ' updated project successfully',
+                devMessage: ' updated project successfully',
                 body: updatedProject,
             });
         } catch (err: any) {

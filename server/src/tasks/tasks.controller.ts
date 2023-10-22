@@ -31,7 +31,7 @@ export class TasksController {
     @UseInterceptors(FilesInterceptor('images', 10, fileStorage))
     @Post('create')
     create(@Body() createTaskDto: CreateTaskDto, @UploadedFiles() images?: Express.Multer.File[]) {
-        return this.tasksService.create(createTaskDto, images);
+        return this.tasksService.createTask(createTaskDto, images);
     }
 
     @Get('all')

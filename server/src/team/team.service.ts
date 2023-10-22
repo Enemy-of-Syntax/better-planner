@@ -196,13 +196,24 @@ export class TeamService {
             const invitedUser: User[] = await this.authSql.findUserById(id);
 
             if (email === invitedUser[0]?.email) {
-                const createdMember = await this.memberSql.createMember(
+                const createdMember: any = await this.memberSql.createMember(
                     await uuidV4(),
                     memberDto,
                     MEMBER_STATUS.ACTIVE,
 
                     memberDto.teamId,
                 );
+
+                if (!createdMember || createdMember.length === 0) {
+                    throw new HttpException(
+                        {
+                            message: 'Failed to create new member',
+                            devMessage: 'Failed-to-create-new-member',
+                        },
+                        400,
+                    );
+                }
+
                 return Responser({
                     statusCode: 201,
                     message: 'new member added to team',
@@ -213,7 +224,7 @@ export class TeamService {
         } catch (err: any) {
             throw new HttpException(
                 {
-                    message: 'Failed to invite new member',
+                    message: 'Failed to accept invitation',
                     devMessage: err.message || '',
                 },
                 400,

@@ -1,9 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { MEMBER_STATUS, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import { TeamQuery } from 'src/team/team.sql';
+import { Member, Team } from 'src/@types/SqlReturnType';
+import { ChangeMMTime } from 'libs/UTCtime';
 
 @Injectable()
 export class memberQuery {
@@ -65,13 +67,23 @@ export class memberQuery {
 
     async createMember(id: string, dto: CreateMemberDto, status: MEMBER_STATUS, teamId: string) {
         const team = await this.teamsql.findSingleTeam(teamId);
-        const userId = team[0]?.created_user_id;
+
+        // check if user already exist in team
+        if (team.length > 0 && team[0]?.members) {
+            const teamMembersArr: Member[] = team[0].members;
+
+            for (let i = 0; i < teamMembersArr.length; i++) {
+                if (teamMembersArr[i]?.user_id === dto.userId) return false;
+            }
+        }
+
+        const createdUserId = team[0]?.created_user_id;
         await this.prisma.$executeRaw`INSERT INTO public.members 
                                       (id,team_id,user_id,status,created_user_id,created_at,updated_at)
                                       VALUES (${id},${dto.teamId},${
             dto.userId
-        },${status},${userId},${new Date()},${new Date()})`;
-
+        },${status},${createdUserId},${await ChangeMMTime()},${await ChangeMMTime()})`;
+        console.log('reach');
         return await this.getSingleMember(id);
     }
 

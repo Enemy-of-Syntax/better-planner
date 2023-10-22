@@ -224,10 +224,10 @@ enum PROJECT_STATUS {
 }
 
 enum MEMBER_ROLE {
-  SUPER_ADMIN
-  ADMIN
-  LEADER
-  MEMBER
+  SUPER_ADMIN   // Can access all (speciality - can change role)
+  ADMIN         // Can access all (but cannot change role)
+  LEADER        // Can access for task assign,and team member invitation and removing
+  MEMBER       
 }
 
 enum MEMBER_STATUS {

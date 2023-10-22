@@ -16,7 +16,7 @@ interface Image {
 @Injectable()
 export class TasksService {
     constructor(private readonly taskSql: TaskSqlService, readonly authsql: QueryService) {}
-    async create(dto: CreateTaskDto, Images?: Express.Multer.File[]) {
+    async createTask(dto: CreateTaskDto, Images?: Express.Multer.File[]) {
         try {
             const newTask: any = await this.taskSql.InsertNewTask({
                 id: await uuidV4(),
